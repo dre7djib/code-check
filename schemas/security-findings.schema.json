@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Résumé sécurité que le directeur a le droit de voir. Ce n'est PAS le schéma des findings sécurité : celui-ci est le schéma Cloudflare, copié en phase 4 dans skills/security-audit/.",
+  "$id": "https://code-check.local/schemas/security-summary.json",
+  "title": "security-summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["confirmed", "needs_validation", "rejected", "cross_hints", "status"],
+  "properties": {
+    "confirmed": { "type": "integer", "minimum": 0 },
+    "needs_validation": { "type": "integer", "minimum": 0 },
+    "rejected": { "type": "integer", "minimum": 0 },
+    "cross_hints": { "type": "integer", "minimum": 0 },
+    "status": { "enum": ["ok", "failed", "skipped"] }
+  }
+}

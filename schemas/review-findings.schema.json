@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://code-check.local/schemas/review-findings.schema.json",
+  "title": "Finding de revue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "axis", "severity", "file", "line", "title", "evidence", "rule", "source"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9-]+:[a-z0-9-]+$" },
+    "axis": { "enum": ["architecture", "naming", "tests", "errors", "simplicity", "deterministic"] },
+    "severity": { "enum": ["blocking", "fix", "suggestion"] },
+    "file": { "type": "string", "pattern": "^(?![/\\\\])(?![A-Za-z]:)(?!(.*[/\\\\])?\\.\\.([/\\\\]|$)).+$" },
+    "line": { "type": "integer", "minimum": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "evidence": { "type": "string", "minLength": 1 },
+    "rule": { "type": "string", "minLength": 1 },
+    "source": { "enum": ["archunit", "dependency-cruiser", "linter", "dependency-audit", "agent"] },
+    "route": { "enum": ["security"] },
+    "autofix": { "enum": ["safe"] },
+    "also_flagged_by": { "type": "array", "items": { "type": "string" } }
+  }
+}

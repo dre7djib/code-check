@@ -1,0 +1,43 @@
+version: 1
+architecture:
+  style: hexagonal
+  layers:
+    - name: domain
+      paths: ["src/domain/**"]
+      may_import: []
+    - name: application
+      paths: ["src/application/**"]
+      may_import: [domain]
+    - name: adapters
+      paths: ["src/adapters/**"]
+      may_import: [domain, application]
+  forbidden_imports:
+    - from: "src/domain/**"
+      to: ["express", "src/application", "src/adapters"]
+naming:
+  - id: transactional-service
+    include: ["**/*Service.ts"]
+    when_annotation: ["Transactional"]
+    suffix: Transactional
+    severity: fix
+tests:
+  risky_paths: ["src/domain/**", "src/application/**"]
+  severity_if_missing: fix
+errors:
+  forbid_empty_catch: true
+  severity: fix
+axes:
+  review: [architecture, naming, tests, errors, simplicity]
+thresholds:
+  security_confirmed_min_severity: high
+budgets:
+  fast:     { max_minutes: 5,  max_tokens: 80000 }
+  standard: { max_minutes: 15, max_tokens: 250000 }
+  deep:     { max_minutes: 90, max_tokens: 1500000 }
+display:
+  review_max_findings: 10
+security:
+  access: fast
+pre_push:
+  enabled: false
+  blocking: false

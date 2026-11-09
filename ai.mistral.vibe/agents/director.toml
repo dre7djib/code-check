@@ -1,0 +1,12 @@
+# Adaptateur Mistral Vibe. Ne contient pas la procédure.
+display_name = "director"
+description = "Directeur code-check : lance la skill review et s'arrête. Ne modifie pas le code."
+safety = "safe"
+enabled_tools = ["read_file", "grep", "bash"]
+
+[tools.bash]
+permission = "ask"
+
+# Consigne : lire agents/director.md à la racine du plugin (créé en phase 5).
+# Phase 1 : lancer la skill review, afficher summary.txt, s'arrêter.
+# Ne pas modifier le code. CODE_CHECK_HOST=mistral.

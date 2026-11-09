@@ -1,0 +1,8 @@
+{
+  "name": "code-check",
+  "version": "0.1.0",
+  "description": "Revue de code et revue de sécurité séparées, sur les postes de développement.",
+  "license": "UNLICENSED",
+  "author": { "name": "code-check" },
+  "keywords": ["review", "security"]
+}

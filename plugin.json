@@ -1,0 +1,16 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "code-check",
+  "version": "0.1.0",
+  "description": "Revue de code et revue de sécurité séparées, sur les postes de développement.",
+  "license": "UNLICENSED",
+  "author": { "name": "code-check" },
+  "keywords": ["review", "security"],
+  "extensions": {
+    "ai.mistral.vibe": {
+      "schemaVersion": 1,
+      "displayName": "code-check",
+      "toolNamespace": "code_check"
+    }
+  }
+}
