@@ -1,6 +1,6 @@
 # code-check
 
-Revue de code et revue de sécurité séparées, sur les postes de développement. Version 0.5.0. La commande `review` cadre le run, lance les checks déterministes, fait relire cinq axes (architecture, nommage, tests, erreurs, simplicité) par des reviewers isolés et écrit `REVIEW.md`.
+Revue de code et revue de sécurité séparées, sur les postes de développement. Version 0.6.0. La commande `review` cadre le run, lance les checks déterministes, fait relire cinq axes (architecture, nommage, tests, erreurs, simplicité) par des reviewers isolés et écrit `REVIEW.md`.
 
 ## Hôtes
 
@@ -17,7 +17,7 @@ Les chaînes marquées « à relever » ou « attendu » ne sont pas observées.
 
 ## Installation
 
-Même tag (`v0.5.0`) pour chaque hôte (pas une branche).
+Même tag (`v0.6.0`) pour chaque hôte (pas une branche).
 
 - **Vibe** : placer le dépôt dans `~/.vibe/plugins/code-check` (ou le chemin d'organisation). `/plugins` doit lister `code-check`.
 - **Copilot** : installer depuis le tag par la CLI, le marketplace d'organisation, ou l'extension. L'écran des plugins doit lister la skill `review`.
@@ -53,7 +53,11 @@ meta.json  candidates.json  verify/<n>.{prompt.md,verdict.json}
 
 À faire dans le workspace (le plugin ne modifie pas le projet) : ajouter `/.review/` à son `.gitignore`. Le terminal n'affiche que les compteurs et le chemin du dossier, jamais un titre. `scripts/assert-review-has-no-security.sh <REVIEW.md> <findings.json>` vérifie qu'aucun finding sécurité n'a fui dans la revue.
 
-Hors périmètre : les six phases, le coverage ledger, le mode deep (phase 6).
+## Commande `security-deep`
+
+Audit complet du dépôt par la skill Cloudflare (six phases, agents isolés en parallèle). Jamais lancé par `check` ni par un hook. Exige `security.access: deep` dans `rules.yml`, Node ≥ 18 et un hôte qui sait déléguer en parallèle (sinon code 3, « deep indisponible sur cet hôte »). Sortie dans le dossier sécurité (`findings.json`, `architecture.md`, `coverage-ledger.json`, trois rapports, `summary.json`), en `0700`.
+
+Le sandbox se déclare par `CODE_CHECK_SANDBOX`, un préfixe de commande qui enveloppe l'exécution du code de la cible, par exemple sur macOS : `CODE_CHECK_SANDBOX="sandbox-exec -p '(version 1)(allow default)(deny network*)'"`. Le script vérifie qu'il exécute `true` et refuse une connexion sortante. Il ne vérifie pas le reste (environnement vide, cible en lecture seule, limites de ressources) : c'est au préfixe de les imposer. Sans sandbox, le run reste en mode dégradé : `needs_validation` et `rejected` seulement, jamais `confirmed`.
 
 ## Commande `check` (directeur)
 
@@ -77,6 +81,6 @@ node --test scripts/*.test.cjs skills/security-audit/*.test.cjs
 
 Fixture d'évaluation : voir `eval/README.md`.
 
-## Ce que 0.5.0 ne fait pas
+## Ce que 0.6.0 ne fait pas
 
-Pas de sécurité deep, pas de hook pre-push, pas de correctifs automatiques. Voir `plans/`.
+ pas de hook pre-push, pas de correctifs automatiques. Voir `plans/`.

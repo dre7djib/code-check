@@ -1,6 +1,6 @@
 {
   "name": "code-check",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Revue de code et revue de sécurité séparées, sur les postes de développement.",
   "license": "UNLICENSED",
   "author": {
@@ -18,6 +18,9 @@
     "./claude/agents/review-orchestrator.md",
     "./claude/agents/review-simplicity.md",
     "./claude/agents/review-tests.md",
+    "./claude/agents/security-deep-general.md",
+    "./claude/agents/security-deep-research.md",
+    "./claude/agents/security-deep.md",
     "./claude/agents/security-hunter.md",
     "./claude/agents/security-orchestrator.md",
     "./claude/agents/security-verifier.md"

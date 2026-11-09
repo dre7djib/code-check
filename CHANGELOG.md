@@ -1,6 +1,16 @@
 # Changelog
 
-## Non publié
+## 0.6.0
+
+- Commande `security-deep` : `agents/security/deep.md` (enveloppe : accès, prérequis, cadrage, dossier, confirmation du parallélisme, sandbox, échéance, clôture) puis skill Cloudflare complète, skill `security-deep`, adaptateurs `security-deep`, `security-deep-research`, `security-deep-general` pour les 4 hôtes.
+- Copie complète de `cloudflare/security-audit-skill` au même SHA (`c1c8a8c1`), voir `vendor-lock.md`. Aucune URL dans la copie.
+- `scripts/check-deep-prereqs.sh` : Node ≥ 18 et validateurs (sinon code 3, rien écrit), `prereqs.json` sur stdout. Sandbox `present` seulement si `CODE_CHECK_SANDBOX` (préfixe de commande) exécute `true` et refuse une connexion sortante ; sinon mode dégradé, aucun `confirmed`.
+- `scripts/finalize-deep.cjs` : valide ledger et findings, refuse `confirmed` sans sandbox, `summary.json` au schéma du fast, `exit-code`, `failure.txt`. Run partiel : `status: failed`, fichiers gardés.
+- `scope.cjs --command security-deep` : mode `deep`, budget deep. `check` et le hook n'y touchent jamais.
+- Correctif : le seuil `security_confirmed_min_severity` lisait `severity` comme une chaîne ; dans le schéma Cloudflare c'est un objet (`severity.overall_severity`). Un `confirmed` n'atteignait donc jamais le seuil (fast et deep).
+- Deep branché sur le commit amont `c1c8a8c1`. Limites : aucun run pilote réel (code et autorisation d'envoi au modèle requis) ; le test de sandbox ne prouve ni l'environnement vide, ni la cible en lecture seule, ni les limites de ressources ; la capacité de délégation parallèle n'est confirmée qu'à l'exécution.
+
+## 0.5.1
 
 - Détecteur de secrets intégré `scripts/scan-secrets.cjs` (clés AWS, clés privées, jetons GitHub/Slack/Stripe/Google, JWT, identifiants dans une URL, affectations littérales à entropie suffisante, placeholders ignorés). Il lit les lignes ajoutées du diff, donne la ligne du fichier, et ne recopie jamais la valeur. Il alimente `security-seeds.json` ; gitleaks n'est plus appelé (sa lecture d'un `gitleaks.json` déposé à la main reste). Avant : sans gitleaks, aucun secret n'était détecté, et gitleaks lancé sur le patch ne donnait pas de chemin de fichier exploitable.
 - Limite : détection par motifs, sans l'historique git ; le chasseur sécurité reste le second filet.

@@ -270,7 +270,7 @@ function finalize(secDir, target, threshold, budgetOut) {
   console.log(`sécurité : confirmed ${summary.confirmed} · needs_validation ${summary.needs_validation} · rejected ${summary.rejected} · pistes croisées ${summary.cross_hints}`);
   console.log(`Dossier : ${secDir}`);
   const min = SEV[threshold] || SEV.high;
-  const hit = findings.some((f) => f.verdict === 'confirmed' && (SEV[f.severity] || 0) >= min);
+  const hit = findings.some((f) => f.verdict === 'confirmed' && (SEV[f.severity && f.severity.overall_severity] || 0) >= min);
   fs.writeFileSync(path.join(secDir, 'exit-code'), hit ? '1' : '0');
   process.exit(hit ? 1 : 0);
 }

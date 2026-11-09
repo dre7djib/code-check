@@ -1,0 +1,11 @@
+# Adaptateur Mistral Vibe. Ne contient pas la procédure.
+display_name = "security-deep-general"
+description = "Agent general du deep : exécution locale bornée, seulement dans un bac à sable présent."
+safety = "safe"
+enabled_tools = ["read_file", "grep", "bash"]
+
+# Consigne : lire agents/security/deep.md à la racine du plugin et le suivre sans l'improviser : rôle general, tel que la skill le définit.
+# Ne pas modifier le code de la cible.
+
+[tools.bash]
+permission = "ask"

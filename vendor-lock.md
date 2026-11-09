@@ -29,14 +29,14 @@ Frontmatter seulement, corps inchangé (vérifié par `diff`) :
 |---|---|---|---|
 | Ponytail | MIT | 3 | copié |
 | Caveman | MIT | 3 | copié |
-| Cloudflare security-audit | MIT | 4 | **copie partielle, phase 4** (contrat de sortie et validateurs) ; copie complète (chasse, classes d'attaque, ledger) en phase 6 |
+| Cloudflare security-audit | MIT | 4 | **copie complète, phase 6**, même SHA `c1c8a8c1` que la copie partielle de la phase 4 (remplacée, pas superposée) |
 
-## Cloudflare security-audit : copie partielle, phase 4
+## Cloudflare security-audit : copie complète, phase 6
 
-- Arborescence du commit épinglé : tout est à plat dans `skills/security-audit/` (pas de `scripts/` ni de `references/`). On garde cette arborescence. Le validateur lit `report-schema.json` à côté de lui.
-- Copiés : `SKILL.md`, `report-schema.json`, `VALIDATION-AND-REPORTING.md`, `validate-findings.cjs` et son test, `LICENSE`. Aussi `validate-coverage-ledger.cjs` et son test, non listés par le plan : un test de `validate-findings.test.cjs` (« keeps shared helpers aligned with the coverage-ledger validator ») charge ce module. Sans lui, les tests ne passent pas sans modification.
-- `node --test skills/security-audit/*.test.cjs` : 65 tests, passent sans modification. Aucun chemin corrigé.
-- Modification locale : frontmatter de `SKILL.md` seulement (`user-invocable: false`, `disable-model-invocation: true`), corps inchangé. Même raison que Ponytail et Caveman : la description se déclenche sur toute question de sécurité.
-- Non copiés : `HUNTING.md`, `RECONNAISSANCE.md`, `ATTACK-CLASSES.md` et les guides par classe (phase 6). `SKILL.md` y renvoie ; ces renvois sont sans effet en mode fast.
-- Écart avec le plan : `validate-findings.cjs` n'a pas d'option `--target` (un seul argument, le fichier). Le validateur n'est pas modifié. `scripts/validate-security.cjs <findings.json> --target <repo>` le lance tel quel, puis vérifie que chaque fichier et ligne cités existent dans le dépôt cible, que les findings sont triés par fingerprint, et qu'aucun `confirmed` n'est écrit en mode fast.
-- Le schéma vendor n'a pas de champ `quote`. La citation du candidat est recopiée dans `evidence[].description` (préfixe `Citation : `), vérifiée contre le fichier avant l'écriture.
+- Même commit `c1c8a8c1471069fb0e188eeaff69b8e8db6564a8` que la copie partielle (le dernier commit du dossier `skills/security-audit/` de l'amont). Aucun commit plus récent n'est pris : le delta à relire est l'ajout des 11 fichiers de chasse, sans changement des 8 fichiers déjà copiés (`cmp` identique, hors frontmatter de `SKILL.md`).
+- Arborescence à plat conservée : `SKILL.md`, `report-schema.json`, `validate-findings.cjs`, `validate-coverage-ledger.cjs` et leurs tests, `RECONNAISSANCE.md`, `HUNTING.md`, `ATTACK-CLASSES.md`, `VALIDATION-AND-REPORTING.md` et les 9 guides par classe (`AI-AND-LLM`, `CLIENT-SIDE`, `CLOUD-AND-DEPLOYMENT`, `DATA-ISOLATION-AND-LIFECYCLE`, `DESKTOP-MOBILE-AND-LOCAL-IPC`, `MEMORY-SAFETY-AND-BINARY`, `PROTOCOLS-RPC-AND-MESSAGING`, `RESOURCE-EXHAUSTION-AND-AVAILABILITY`, `SUPPLY-CHAIN-AND-RELEASE`, `WEB-PROTOCOL-AND-AUTH`), `LICENSE`.
+- `node --test skills/security-audit/*.test.cjs` : 65 tests, verts, sans modification.
+- Contrôle télémétrie : `grep -E 'https?://'` sur la copie complète (markdown, `.cjs`, `.json`) : aucune occurrence, donc aucune URL d'exemple à lister et aucun point d'envoi de données.
+- Modification locale inchangée : frontmatter de `SKILL.md` seulement (`user-invocable: false`, `disable-model-invocation: true`).
+- Écart assumé : la skill prévoit un dossier de sortie `~/security-audit-skill/<repo>/run-<N>` ; l'enveloppe `agents/security/deep.md` le remplace par le dossier sécurité du plugin, hors dépôt ou ignoré par git (la skill autorise un dossier dans la cible si git l'ignore). `validate-findings.cjs` est appelé via `scripts/validate-security.cjs --target`.
+- Relecteur : relu par Claude (assistant) ; signature du propriétaire à apposer.

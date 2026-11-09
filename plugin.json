@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "code-check",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Revue de code et revue de sécurité séparées, sur les postes de développement.",
   "license": "UNLICENSED",
   "author": { "name": "code-check" },
