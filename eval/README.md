@@ -22,3 +22,13 @@ Attendu : les quatre cas dans `.review/runs/<id>/review/merged.json`, sans doubl
 | `missing-test-only` | un seul finding, `axis: tests` ; aucun doublon `simplicity` |
 
 Mesure des tokens : `scripts/measure-tokens.sh <runA> <runB> eval/expected/java-planted.json`. Voir `token-report.md`.
+
+## security-fast (phase 4)
+
+Mini-repo Java dont le diff concatène un paramètre HTTP dans une requête SQL (`ProductSearch.java:17`, appelée par `ProductController`). Attendu (`expected/security-fast.json`) : une entrée `needs_validation` sur ce fichier dans `findings.json`, validateur `validate-security.cjs --target` à 0, jamais `confirmed` (pas de bac à sable), et `scripts/assert-review-has-no-security.sh <REVIEW.md> <findings.json>` à 0.
+
+```
+eval/setup-fixture.sh security-fast /tmp/fx && cd /tmp/fx && <lancer review puis security sur l'hôte>
+```
+
+Le test `scripts/security-fast.test.cjs` rejoue les scripts de bout en bout avec des réponses d'agents écrites à la main. Il ne prouve pas qu'un modèle détecte le défaut : cela se mesure par un run réel sur chaque hôte.

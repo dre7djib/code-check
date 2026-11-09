@@ -1,0 +1,3 @@
+[
+  { "case": "sql-concat", "verdict": "needs_validation", "kind": "injection", "file": "src/main/java/com/acme/shop/adapters/persistence/ProductSearch.java", "line": 17 }
+]

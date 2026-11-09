@@ -1,0 +1,11 @@
+# Adaptateur Mistral Vibe. Ne contient pas la procédure.
+display_name = "security-orchestrator"
+description = "Orchestrateur sécurité fast de code-check. Chasseur, vérificateurs, findings.json validé."
+safety = "safe"
+enabled_tools = ["read_file", "grep", "bash", "task"]
+
+# Consigne : lire agents/security/orchestrator.md à la racine du plugin et le suivre sans l'improviser.
+# Ne pas modifier le code.
+
+[tools.bash]
+permission = "ask"

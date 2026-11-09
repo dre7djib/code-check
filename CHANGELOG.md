@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0
+
+- Commande `security`, mode fast : `agents/security/orchestrator.md`, chasseur et vérificateur dans `agents/security/fast.md` (deux agents à contexte neuf, le vérificateur ne reçoit que le candidat), skills `security` et `security-contract`, adaptateurs `security-hunter`, `security-verifier`, `security-orchestrator` pour Vibe, Copilot, Cursor et Claude.
+- `scripts/security-fast.cjs` : `prepare` (seeds et pistes croisées deviennent des candidats), `save-candidates` (citation vérifiée dans le fichier), `verifier-prompts`, `save-verdict`, `finalize` (`findings.json` trié par fingerprint, validation, `REPORT.md`, `FINDINGS-DETAIL.md`, `NEEDS-VALIDATION.md`, `summary.json`). Un `confirmed` du vérificateur est rétrogradé en `needs_validation` : le fast n'exécute rien. Une réécriture permise après refus du validateur (code 4), puis `status: failed` et code 2.
+- `scripts/prepare-security-dir.sh` : `<workspace>/.review/<nom-du-repo>/runs/<run-id>` en `0700`, `CODE_CHECK_SECURITY_DIR`, suffixe SHA-256 en cas de nom en double, `security-dir.path` dans le run de revue.
+- `scripts/validate-security.cjs` : validateur Cloudflare vendoré puis contrôles du dépôt cible (`--target`). `scripts/assert-review-has-no-security.sh` : échoue si un titre, une citation, un `fichier:ligne` ou les mots SQL, CVE, injection, secret figurent dans `REVIEW.md`.
+- Copie partielle de `cloudflare/security-audit-skill` (`c1c8a8c1`, MIT), voir `vendor-lock.md`. Écart : le validateur vendor n'a pas d'option `--target`.
+- Fixture `eval/fixtures/security-fast` (concaténation SQL dans un adaptateur).
+- Limite : pas de run réel du chasseur et du vérificateur sur les hôtes Vibe, Copilot, Cursor (voir README).
+
 ## 0.3.0
 
 - Axe `simplicity` : reviewer `agents/review/simplicity.md` (Ponytail restreint à la catégorie Lean, couches imposées en ADR, jamais `blocking`), adaptateurs Vibe, Copilot, Cursor, Claude.

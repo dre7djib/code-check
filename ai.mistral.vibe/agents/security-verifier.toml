@@ -1,0 +1,8 @@
+# Adaptateur Mistral Vibe. Ne contient pas la procédure.
+display_name = "security-verifier"
+description = "Vérificateur sécurité fast de code-check. Lecture seule, contexte neuf, renvoie un verdict JSON."
+safety = "safe"
+enabled_tools = ["read_file", "grep"]
+
+# Consigne : lire agents/security/fast.md à la racine du plugin et le suivre sans l'improviser.  Section Vérificateur seulement.
+# Ne pas modifier le code.
