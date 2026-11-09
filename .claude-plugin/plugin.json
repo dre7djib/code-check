@@ -1,6 +1,6 @@
 {
   "name": "code-check",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Revue de code et revue de sécurité séparées, sur les postes de développement.",
   "license": "UNLICENSED",
   "author": {
@@ -16,6 +16,7 @@
     "./claude/agents/review-errors.md",
     "./claude/agents/review-naming.md",
     "./claude/agents/review-orchestrator.md",
+    "./claude/agents/review-simplicity.md",
     "./claude/agents/review-tests.md"
   ]
 }

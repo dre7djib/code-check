@@ -1,0 +1,3 @@
+[
+  { "case": "needless-factory", "axis": "simplicity", "severity": "suggestion", "rule": "simplicity.yagni", "file": "src/main/java/com/acme/shop/support/LabelFactory.java", "line": 4 }
+]

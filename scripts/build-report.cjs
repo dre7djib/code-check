@@ -14,16 +14,51 @@ const ctx = readJson(path.join(runDir, 'context.json'));
 if (!ctx) { console.error('context.json illisible'); process.exit(3); }
 
 const RANK = { blocking: 0, fix: 1, suggestion: 2 };
-const stats = { schema: 0, offAxis: 0 };
+const stats = { schema: 0, offAxis: 0, testDup: 0, anchored: 0, unlocated: 0 };
 const all = []; // { f, order }
 const crossHints = [];
+
+const testsActive = (ctx.axes || []).includes('tests');
+const TEST_MISSING = /(\btests?\b.*(manqu|absent|aucun|sans)|(manqu|absent|aucun|sans).*\btests?\b|untested|missing[- ]test|no[- ]test)/i;
+
+// Ancrage des findings d'agent : le fichier doit exister ; si la première ligne de `evidence` se
+// trouve dans le fichier, `line` est recalée sur l'occurrence la plus proche. Sinon, une ligne
+// hors du fichier fait écarter le finding. Les modèles confondent parfois n° de ligne du diff et du fichier.
+const fileCache = new Map();
+function fileLines(rel) {
+  if (!fileCache.has(rel)) {
+    let v = null;
+    try { v = fs.readFileSync(path.join(ctx.repo.path, rel), 'utf8').split('\n'); } catch { /* absent */ }
+    fileCache.set(rel, v);
+  }
+  return fileCache.get(rel);
+}
+function anchor(f) {
+  if (f.source !== 'agent') return f;
+  const src = fileLines(f.file);
+  if (!src) { stats.unlocated++; return null; }
+  const first = (f.evidence.split('\n').map((l) => l.trim()).find(Boolean)) || '';
+  const hits = first.length >= 6 ? src.flatMap((l, i) => (l.trim() === first ? [i + 1] : [])) : [];
+  if (hits.length) {
+    const best = hits.reduce((a, b) => (Math.abs(b - f.line) < Math.abs(a - f.line) ? b : a));
+    if (best !== f.line) { stats.anchored++; return { ...f, line: best }; }
+    return f;
+  }
+  if (f.line > src.length) { stats.unlocated++; return null; }
+  return f;
+}
 
 function take(list, expectedAxis) {
   for (const f of list) {
     if (validateFinding(f).length) { stats.schema++; continue; }
     if (expectedAxis && f.axis !== expectedAxis) { stats.offAxis++; continue; }
+    // simplicity : jamais blocking en v1.
+    if (f.axis === 'simplicity' && f.severity === 'blocking') { stats.offAxis++; continue; }
+    // simplicity : un test manquant relève de l'axe tests, supprimé si cet axe est actif.
+    if (f.axis === 'simplicity' && testsActive && TEST_MISSING.test(`${f.title} ${f.rule}`)) { stats.testDup++; continue; }
     if (f.route === 'security') { crossHints.push(f); continue; }
-    all.push(f);
+    const a = anchor(f);
+    if (a) all.push(a);
   }
 }
 
@@ -38,6 +73,16 @@ for (const axis of axes) {
   const data = readJson(path.join(runDir, 'review', 'findings', `${axis}.json`));
   if (!Array.isArray(data)) { missing.push(axis); continue; }
   take(data, axis);
+}
+
+// pistes du reviewer simplicité : vers cross-hints.json seulement
+const sHints = readJson(path.join(runDir, 'review', 'findings', 'simplicity-hints.json'));
+const hintObjs = [];
+if (Array.isArray(sHints)) {
+  for (const h of sHints) {
+    if (h && typeof h.file === 'string' && Number.isInteger(h.line) && typeof h.note === 'string' && !/(^|[\/\\])\.\.([\/\\]|$)|^[\/\\]/.test(h.file)) hintObjs.push({ file: h.file, line: h.line, note: h.note, from: 'simplicity' });
+    else stats.schema++;
+  }
 }
 
 // seeds : jamais dans le rapport
@@ -84,7 +129,7 @@ function render(list, detail, total) {
   const notes = [];
   if (missing.length) notes.push(`Axes non exécutés : ${missing.join(', ')}.`);
   if (skippedArch) notes.push('Architecture déterministe non exécutée.');
-  const hint = crossHints.length || seedCount ? 'Des points ont été transmis au rapport sécurité.' : '';
+  const hint = crossHints.length || hintObjs.length || seedCount ? 'Des points ont été transmis au rapport sécurité.' : '';
   if (!list.length && !notes.length && !hint) return 'Aucun point.\n';
   const out = [...head, ''];
   if (notes.length) out.push(...notes, '');
@@ -103,7 +148,7 @@ function render(list, detail, total) {
     }
     out.push('');
   }
-  if (!detail) out.push(`${list.length} findings affichés sur ${total}. Le détail est dans REVIEW-DETAIL.md.`, '');
+  if (!detail && list.length) out.push(`${list.length} findings affichés sur ${total}. Le détail est dans REVIEW-DETAIL.md.`, '');
   if (hint) out.push(hint, '');
   return out.join('\n');
 }
@@ -113,7 +158,7 @@ fs.mkdirSync(reviewDir, { recursive: true });
 fs.writeFileSync(path.join(reviewDir, 'merged.json'), JSON.stringify(merged, null, 2) + '\n');
 fs.writeFileSync(path.join(reviewDir, 'REVIEW.md'), render(shown, false, merged.length));
 fs.writeFileSync(path.join(reviewDir, 'REVIEW-DETAIL.md'), render(merged, true, merged.length));
-fs.writeFileSync(path.join(runDir, 'cross-hints.json'), JSON.stringify(crossHints, null, 2) + '\n');
+fs.writeFileSync(path.join(runDir, 'cross-hints.json'), JSON.stringify([...crossHints, ...hintObjs], null, 2) + '\n');
 
 const count = (s) => merged.filter((f) => f.severity === s).length;
 const summary = [
@@ -121,6 +166,9 @@ const summary = [
   'Sécurité        → ignorée',
   `Écarts schéma   → ${stats.schema}`,
   `Hors axe        → ${stats.offAxis}`,
+  `Doublons tests  → ${stats.testDup}`,
+  `Lignes recalées → ${stats.anchored}`,
+  `Introuvables    → ${stats.unlocated}`,
   `Axes manquants  → ${missing.length ? missing.join(', ') : 'aucun'}`,
   `Hôte            → ${ctx.host}`,
   ''

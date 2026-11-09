@@ -80,7 +80,7 @@ function main() {
     repo: { name: path.basename(repo), path: repo, head },
     stack,
     diff: { base, range, changed_lines: changed, files, touches_review_dir: touchesReview },
-    axes: rules.axes_review.filter((a) => a !== 'simplicity'),
+    axes: rules.axes_review,
     rules_sha256: rules.sha256,
     created_at: now.toISOString()
   };

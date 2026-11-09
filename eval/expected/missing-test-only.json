@@ -1,0 +1,3 @@
+[
+  { "case": "missing-test", "axis": "tests", "severity": "fix", "rule": "tests.risky_paths", "file": "src/main/java/com/acme/shop/domain/ShippingRule.java", "line": 4 }
+]

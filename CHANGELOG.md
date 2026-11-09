@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0
+
+- Axe `simplicity` : reviewer `agents/review/simplicity.md` (Ponytail restreint à la catégorie Lean, couches imposées en ADR, jamais `blocking`), adaptateurs Vibe, Copilot, Cursor, Claude.
+- Composants figés copiés : `skills/ponytail` (MIT, `09c434ab`) et `skills/caveman` (MIT, `ef6050c5`), sans CLI, hooks ni télémétrie. Voir `vendor-lock.md`. La licence de Caveman est MIT, pas Apache-2.0 comme le plan le disait.
+- Règles de l'orchestrateur : un finding `simplicity` `blocking` est écarté (hors axe) ; un finding `simplicity` qui parle d'un test manquant est écarté quand l'axe `tests` est actif ; les `hints` de simplicité vont dans `cross-hints.json`, jamais dans `REVIEW.md`.
+- `scripts/build-prompts.cjs` : prompt de chaque reviewer archivé dans `review/trace/` ; règles intégrales (`full`) ou résumé Caveman plus couches recopiées telles quelles (`compact`).
+- `scripts/measure-tokens.sh` : mesure A/B en caractères (tokens = caractères / 4, estimation), sans réseau. Résultat dans `eval/token-report.md`.
+- `scope.cjs` ne filtre plus `simplicity` dans `context.axes`.
+- Fixtures `port-not-bloat`, `needless-factory`, `missing-test-only`.
+- Écart : un reviewer simplicité peut répondre `{findings, hints}` au lieu d'un tableau (`save-findings.cjs`), pour porter les pistes de sécurité sans champ libre dans le schéma revue.
+
 ## 0.2.0
 
 - Commande `review` complète : checks déterministes (`scripts/run-deterministic.sh` : ArchUnit, dependency-cruiser, versions non épinglées, CVE et secrets vers `security-seeds.json` seulement), quatre reviewers isolés (architecture, nommage, tests, erreurs), fusion et rapport (`scripts/build-report.cjs`) : `REVIEW.md`, `REVIEW-DETAIL.md`, `merged.json`, `cross-hints.json`.

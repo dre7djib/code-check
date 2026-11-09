@@ -30,7 +30,7 @@ test('avec rules.yml : context.json et diff.patch écrits', () => {
   assert.strictEqual(ctx.host, 'claude');
   assert.strictEqual(ctx.mode, 'fast');
   assert.deepStrictEqual(ctx.stack, ['node']);
-  assert.ok(!ctx.axes.includes('simplicity'));
+  assert.ok(ctx.axes.includes('simplicity'));
   assert.match(ctx.rules_sha256, /^[0-9a-f]{64}$/);
   assert.ok(fs.existsSync(path.join(dir, 'diff.patch')));
   assert.ok(!fs.existsSync(path.join(d, '.review', path.basename(d))));

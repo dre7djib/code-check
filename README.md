@@ -1,6 +1,6 @@
 # code-check
 
-Revue de code et revue de sécurité séparées, sur les postes de développement. Version 0.2.0. La commande `review` cadre le run, lance les checks déterministes, fait relire quatre axes (architecture, nommage, tests, erreurs) par des reviewers isolés et écrit `REVIEW.md`.
+Revue de code et revue de sécurité séparées, sur les postes de développement. Version 0.3.0. La commande `review` cadre le run, lance les checks déterministes, fait relire cinq axes (architecture, nommage, tests, erreurs, simplicité) par des reviewers isolés et écrit `REVIEW.md`.
 
 ## Hôtes
 
@@ -17,7 +17,7 @@ Les chaînes marquées « à relever » ou « attendu » ne sont pas observées.
 
 ## Installation
 
-Même tag (`v0.2.0`) pour chaque hôte (pas une branche).
+Même tag (`v0.3.0`) pour chaque hôte (pas une branche).
 
 - **Vibe** : placer le dépôt dans `~/.vibe/plugins/code-check` (ou le chemin d'organisation). `/plugins` doit lister `code-check`.
 - **Copilot** : installer depuis le tag par la CLI, le marketplace d'organisation, ou l'extension. L'écran des plugins doit lister la skill `review`.
@@ -48,6 +48,6 @@ node --test scripts/*.test.cjs
 
 Fixture d'évaluation : voir `eval/README.md`.
 
-## Ce que 0.2.0 ne fait pas
+## Ce que 0.3.0 ne fait pas
 
-Pas de simplicité, de Ponytail ni de Caveman, pas de sécurité, de directeur ni de `/check`, pas de hook pre-push, pas de correctifs automatiques. Voir `plans/`.
+Pas de sécurité, de directeur ni de `/check`, pas de hook pre-push, pas de correctifs automatiques. Voir `plans/`.

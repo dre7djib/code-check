@@ -24,7 +24,7 @@ Le script écrit sur stdout le chemin du dossier de run. Code 3 : afficher le me
 - Diff : `git diff <base>...HEAD` si la branche a des commits d'avance, sinon `git diff HEAD` (travail non commité). Patch écrit tel quel. Les fichiers non suivis par git n'y figurent pas (`git add -N` pour les inclure).
 - Stack par présence de fichiers à la racine : `pom.xml` ou `build.gradle*` → `java` ; `package.json` → `node`.
 - Mode : `fast` si 200 lignes modifiées ou moins et aucun fichier sous `.review/`, sinon `standard`. `deep` n'est jamais choisi ici.
-- `axes` : `axes.review` de `rules.yml` sans `simplicity` (pas encore branché).
+- `axes` : `axes.review` de `rules.yml`, recopié tel quel (`simplicity` inclus depuis la 0.3.0).
 - Le dossier sécurité n'est pas créé.
 
 Ne pas relire ni « comprendre » le diff. Ne pas appeler de reviewer.

@@ -12,3 +12,13 @@ cd /tmp/fx && <lancer la commande review sur l'hôte>
 ```
 
 Attendu : les quatre cas dans `.review/runs/<id>/review/merged.json`, sans doublon `fichier:ligne`, et un `REVIEW.md` sans les mots « CVE », « secret », « injection ». ArchUnit n'est pas dans ce fixture : le rapport porte « Architecture déterministe non exécutée », l'import interdit vient du reviewer d'architecture.
+
+## Autres fixtures (phase 3)
+
+| Fixture | Attendu |
+|---|---|
+| `port-not-bloat` | zéro finding `simplicity` : une interface `domain` et son adapter, conformes à `rules.yml` (`expected` = `[]`) |
+| `needless-factory` | un finding `simplicity` sur une factory à une seule implémentation, hors couches (`support/`) |
+| `missing-test-only` | un seul finding, `axis: tests` ; aucun doublon `simplicity` |
+
+Mesure des tokens : `scripts/measure-tokens.sh <runA> <runB> eval/expected/java-planted.json`. Voir `token-report.md`.
