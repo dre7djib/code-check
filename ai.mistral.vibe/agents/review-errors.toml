@@ -1,0 +1,8 @@
+# Adaptateur Mistral Vibe. Ne contient pas la procédure.
+display_name = "review-errors"
+description = "Reviewer errors de code-check. Lecture seule, renvoie un tableau JSON de findings."
+safety = "safe"
+enabled_tools = ["read_file", "grep"]
+
+# Consigne : lire agents/review/errors.md à la racine du plugin et le suivre sans l'improviser.
+# Ne pas modifier le code.

@@ -1,32 +1,25 @@
 ---
 name: review
-description: Commande review. En 0.1.0 (socle) : charge les règles, cadre le run, écrit context.json, diff.patch et summary.txt. Aucun reviewer.
+description: Commande review. Cadre le run, lance les checks déterministes, fait relire quatre axes (architecture, nommage, tests, erreurs) par des reviewers isolés, et écrit REVIEW.md.
 disable-model-invocation: true
 ---
 
-# review (socle)
+# review
 
-Le répertoire du plugin est deux niveaux au-dessus de ce fichier. Le repo cible est le répertoire de travail de la session.
+Le répertoire du plugin est deux niveaux au-dessus de ce fichier. Le repo cible est le répertoire de travail de la session. Suivre la procédure de `agents/review/orchestrator.md` (lue, pas improvisée), dans cette conversation :
 
-## Procédure
+1. Skill `rules-loader`, puis skill `scoping` (`--command review`, `--host` = hôte de la session). Code 3 : afficher le message, sortir avec 3, ne rien créer.
+2. `bash <plugin>/scripts/run-deterministic.sh <run>/context.json <run>/deterministic`.
+3. Lancer **en parallèle** un reviewer isolé par axe de `context.json` : agents `review-architecture`, `review-naming`, `review-tests`, `review-errors` de l'hôte. Quatre chemins dans le message (`context.json`, `rules.yml`, `diff.patch`, chemin de sortie), rien d'autre. Si l'hôte ne sait pas ouvrir un contexte neuf : s'arrêter, code 3, « délégation indisponible sur cet hôte ».
+4. Pour chaque réponse : `node <plugin>/scripts/save-findings.cjs <axe> <run>` avec le JSON sur stdin.
+5. Skill `review-report` (`build-report.cjs`). Afficher `summary.txt` tel quel.
 
-1. Suivre la skill `rules-loader` sur le repo cible. Code 3 : afficher le message, sortir avec le code 3, ne rien créer.
-2. Suivre la skill `scoping` (`--command review`, `--host` = hôte de la session). Elle crée `.review/runs/<run-id>/` avec `context.json` et `diff.patch`. Code 3 : idem.
-3. Lancer `node <plugin>/scripts/write-summary.cjs <dossier-de-run>`. Il écrit `summary.txt` et l'affiche.
-4. Afficher ce texte tel quel et s'arrêter. Code de sortie 0.
+Code de sortie : celui de `build-report.cjs` (1 bloquant, 2 axe manquant sans bloquant, 0 sinon).
 
 ## Interdits
 
-- Invoquer un reviewer ou un sous-agent.
-- Écrire `REVIEW.md`.
+- Faire les axes soi-même dans cette conversation.
+- Passer `review-findings.json` aux reviewers.
+- Écrire `REVIEW.md` à la main, ou y mettre une piste de sécurité.
 - Créer `.review/<nom-du-repo>/runs/` à la racine du workspace.
 - Modifier le code du repo.
-
-## Sortie attendue
-
-```
-Revue de code   → <chemin>/review/REVIEW.md   non généré (socle)
-Sécurité        → ignorée
-Pistes croisées → 0
-Hôte            → <context.host>
-```

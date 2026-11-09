@@ -1,8 +1,21 @@
 {
   "name": "code-check",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Revue de code et revue de sécurité séparées, sur les postes de développement.",
   "license": "UNLICENSED",
-  "author": { "name": "code-check" },
-  "keywords": ["review", "security"]
+  "author": {
+    "name": "code-check"
+  },
+  "keywords": [
+    "review",
+    "security"
+  ],
+  "agents": [
+    "./claude/agents/director.md",
+    "./claude/agents/review-architecture.md",
+    "./claude/agents/review-errors.md",
+    "./claude/agents/review-naming.md",
+    "./claude/agents/review-orchestrator.md",
+    "./claude/agents/review-tests.md"
+  ]
 }

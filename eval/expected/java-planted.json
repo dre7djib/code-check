@@ -1,0 +1,6 @@
+[
+  { "case": "hex-import", "axis": "architecture", "severity": "blocking", "rule": "layers.domain.forbidden_imports", "file": "src/main/java/com/acme/shop/domain/notify/OrderNotifier.java", "line": 3 },
+  { "case": "naming-transactional", "axis": "naming", "severity": "fix", "rule": "transactional-service", "file": "src/main/java/com/acme/shop/application/OrderService.java", "line": 6 },
+  { "case": "missing-test", "axis": "tests", "severity": "fix", "rule": "tests.risky_paths", "file": "src/main/java/com/acme/shop/domain/DiscountRule.java", "line": 4 },
+  { "case": "empty-catch", "axis": "errors", "severity": "fix", "rule": "errors.forbid_empty_catch", "file": "src/main/java/com/acme/shop/adapters/web/OrderController.java", "line": 12 }
+]

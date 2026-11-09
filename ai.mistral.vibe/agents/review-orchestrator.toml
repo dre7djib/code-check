@@ -1,0 +1,11 @@
+# Adaptateur Mistral Vibe. Ne contient pas la procédure.
+display_name = "review-orchestrator"
+description = "Orchestrateur de revue code-check. Enchaîne déterministe, reviewers, fusion."
+safety = "safe"
+enabled_tools = ["read_file", "grep", "bash", "task"]
+
+# Consigne : lire agents/review/orchestrator.md à la racine du plugin et le suivre sans l'improviser.
+# Ne pas modifier le code.
+
+[tools.bash]
+permission = "ask"

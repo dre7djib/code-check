@@ -1,12 +1,12 @@
 # code-check
 
-Revue de code et revue de sécurité séparées, sur les postes de développement. Version 0.1.0 : **socle**. La commande `review` écrit un contexte et s'arrête. Aucun jugement de code.
+Revue de code et revue de sécurité séparées, sur les postes de développement. Version 0.2.0. La commande `review` cadre le run, lance les checks déterministes, fait relire quatre axes (architecture, nommage, tests, erreurs) par des reviewers isolés et écrit `REVIEW.md`.
 
 ## Hôtes
 
 Un seul paquet pour quatre agents. `CODE_CHECK_HOST` : `mistral`, `copilot`, `claude`, `cursor`.
 
-| Hôte | Manifeste / adaptateur | Commande | État 0.1.0 sur le poste de développement |
+| Hôte | Manifeste / adaptateur | Commande | État sur le poste de développement |
 |---|---|---|---|
 | Claude Code | `.claude-plugin/plugin.json` | `/code-check:review` (forme attendue, à confirmer à l'install) | CLI 2.1.316 présent |
 | Cursor | `.cursor-plugin/plugin.json`, `cursor/agents/` | à relever à l'install | présent |
@@ -17,7 +17,7 @@ Les chaînes marquées « à relever » ou « attendu » ne sont pas observées.
 
 ## Installation
 
-Même tag `v0.1.0` pour chaque hôte (pas une branche).
+Même tag (`v0.2.0`) pour chaque hôte (pas une branche).
 
 - **Vibe** : placer le dépôt dans `~/.vibe/plugins/code-check` (ou le chemin d'organisation). `/plugins` doit lister `code-check`.
 - **Copilot** : installer depuis le tag par la CLI, le marketplace d'organisation, ou l'extension. L'écran des plugins doit lister la skill `review`.
@@ -26,16 +26,17 @@ Même tag `v0.1.0` pour chaque hôte (pas une branche).
 
 ## Utilisation
 
-Dans un repo contenant `.review/rules.yml` (modèle : `templates/rules.example.yml`), lancer la commande `review`. Elle crée `.review/runs/<run-id>/` avec `context.json`, `diff.patch`, `summary.txt` et affiche :
+Dans un repo contenant `.review/rules.yml` (modèle : `templates/rules.example.yml`), lancer la commande `review`. Elle crée `.review/runs/<run-id>/` :
 
 ```
-Revue de code   → <chemin>/review/REVIEW.md   non généré (socle)
-Sécurité        → ignorée
-Pistes croisées → 0
-Hôte            → <hôte>
+context.json  diff.patch  summary.txt  cross-hints.json
+deterministic/{raw/,review-findings.json,security-seeds.json}
+review/{findings/<axe>.json,merged.json,REVIEW.md,REVIEW-DETAIL.md}
 ```
 
-Sans `rules.yml` : message « rules.yml manquant », code 3, aucun dossier créé.
+Codes de sortie : 0 rien de bloquant, 1 au moins un `blocking`, 2 un axe a échoué sans bloquant, 3 configuration invalide (pas de `rules.yml`, délégation indisponible sur l'hôte).
+
+Les outils déterministes ne sont pas embarqués : ArchUnit (test `*Architecture*` du repo), dependency-cruiser (devDependency + config du repo), gitleaks (sur le PATH). Absent = skip noté dans `deterministic/raw/skipped.txt`.
 
 `rules.yml` est versionné, propriété de l'équipe du repo. `.review/runs/` est à ignorer par git.
 
@@ -45,6 +46,8 @@ Sans `rules.yml` : message « rules.yml manquant », code 3, aucun dossier cré�
 node --test scripts/*.test.cjs
 ```
 
-## Ce que 0.1.0 ne fait pas
+Fixture d'évaluation : voir `eval/README.md`.
 
-Pas de reviewer, pas d'orchestrateur, pas de script déterministe, pas de Ponytail, Caveman ni skill Cloudflare, pas de hook pre-push, pas de `REVIEW.md`. Voir `plans/` pour la suite.
+## Ce que 0.2.0 ne fait pas
+
+Pas de simplicité, de Ponytail ni de Caveman, pas de sécurité, de directeur ni de `/check`, pas de hook pre-push, pas de correctifs automatiques. Voir `plans/`.
