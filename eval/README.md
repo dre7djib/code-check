@@ -32,3 +32,7 @@ eval/setup-fixture.sh security-fast /tmp/fx && cd /tmp/fx && <lancer review puis
 ```
 
 Le test `scripts/security-fast.test.cjs` rejoue les scripts de bout en bout avec des réponses d'agents écrites à la main. Il ne prouve pas qu'un modèle détecte le défaut : cela se mesure par un run réel sur chaque hôte.
+
+## check-both (phase 5)
+
+`security-fast` plus un import Spring dans `domain/notify/OrderNotifier.java`. Attendu (`expected/check-both.json`) : un `blocking` d'architecture, un `needs_validation` d'injection, `REVIEW.md` sans la citation SQL, code 1. `scripts/director.test.cjs` rejoue le scénario, le timeout forcé à 1 seconde et les droits d'accès.

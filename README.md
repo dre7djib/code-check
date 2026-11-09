@@ -1,6 +1,6 @@
 # code-check
 
-Revue de code et revue de sécurité séparées, sur les postes de développement. Version 0.4.0. La commande `review` cadre le run, lance les checks déterministes, fait relire cinq axes (architecture, nommage, tests, erreurs, simplicité) par des reviewers isolés et écrit `REVIEW.md`.
+Revue de code et revue de sécurité séparées, sur les postes de développement. Version 0.5.0. La commande `review` cadre le run, lance les checks déterministes, fait relire cinq axes (architecture, nommage, tests, erreurs, simplicité) par des reviewers isolés et écrit `REVIEW.md`.
 
 ## Hôtes
 
@@ -17,7 +17,7 @@ Les chaînes marquées « à relever » ou « attendu » ne sont pas observées.
 
 ## Installation
 
-Même tag (`v0.4.0`) pour chaque hôte (pas une branche).
+Même tag (`v0.5.0`) pour chaque hôte (pas une branche).
 
 - **Vibe** : placer le dépôt dans `~/.vibe/plugins/code-check` (ou le chemin d'organisation). `/plugins` doit lister `code-check`.
 - **Copilot** : installer depuis le tag par la CLI, le marketplace d'organisation, ou l'extension. L'écran des plugins doit lister la skill `review`.
@@ -53,7 +53,21 @@ meta.json  candidates.json  verify/<n>.{prompt.md,verdict.json}
 
 À faire dans le workspace (le plugin ne modifie pas le projet) : ajouter `/.review/` à son `.gitignore`. Le terminal n'affiche que les compteurs et le chemin du dossier, jamais un titre. `scripts/assert-review-has-no-security.sh <REVIEW.md> <findings.json>` vérifie qu'aucun finding sécurité n'a fui dans la revue.
 
-Hors périmètre en 0.4.0 : les six phases, le coverage ledger, le mode deep (phase 6), le directeur et `/check` (phase 5).
+Hors périmètre : les six phases, le coverage ledger, le mode deep (phase 6).
+
+## Commande `check` (directeur)
+
+`check` cadre une fois (`scoping`, un seul `context.json` et `diff.patch` pour les deux pipelines), lance la revue et la sécurité fast, route les pistes croisées (seconde passe `add-hints`, sans refaire la chasse), et n'imprime que des compteurs :
+
+```
+Revue de code   → <REVIEW.md>     2 bloquants · 5 à corriger · 8 suggestions
+Sécurité        → <dossier>       1 confirmed · 2 needs_validation
+Pistes croisées → 1 transmise à la sécurité
+```
+
+Codes : 0 rien de bloquant ; 1 bloquant de revue ou `confirmed` sécurité au seuil `thresholds.security_confirmed_min_severity` ; 2 un pipeline manque ou échoue, sans bloquant ; 3 configuration, accès refusé, `deep` demandé (« utiliser la commande security-deep »). Le directeur ne lit de la sécurité que `summary.json` (`scripts/assert-director-blind.sh` le contrôle). Sans deux contextes simultanés, les pipelines s'enchaînent (`pipelines séquentiels` dans `summary.txt`). Le directeur n'attend pas au-delà de `max_minutes` + 1 minute (`scripts/await-pipeline.cjs`) et marque l'absent `failed`.
+
+`security.access` de `rules.yml` (`none`, `fast`, `deep`; absent = `fast`) est la politique du repo, pas un verrou par personne : `review` l'ignore, `security` et `check` exigent `fast`, `security-deep` exigera `deep` (`scripts/check-access.cjs`). Pour retirer une commande à un groupe, désactiver la skill dans la config d'administration de l'hôte. Les garanties réelles : le dossier `.review/<nom-du-repo>/runs/` en `0700` et gitignoré, et le fait que `review` ne lance pas la sécurité.
 
 ## Tests
 
@@ -63,6 +77,6 @@ node --test scripts/*.test.cjs skills/security-audit/*.test.cjs
 
 Fixture d'évaluation : voir `eval/README.md`.
 
-## Ce que 0.4.0 ne fait pas
+## Ce que 0.5.0 ne fait pas
 
-Pas de directeur ni de `/check`, pas de sécurité deep, pas de hook pre-push, pas de correctifs automatiques. Voir `plans/`.
+Pas de sécurité deep, pas de hook pre-push, pas de correctifs automatiques. Voir `plans/`.

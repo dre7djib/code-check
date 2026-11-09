@@ -5,7 +5,8 @@
 //   save-candidates <dossier-sécurité>               stdin : tableau JSON du chasseur -> candidates.json
 //   verifier-prompts <dossier-sécurité>              verify/<n>.prompt.md (candidat seul, jamais le chasseur)
 //   save-verdict <dossier-sécurité> <n>              stdin : verdict JSON -> verify/<n>.verdict.json
-//   finalize <dossier-sécurité> --target <repo> [--threshold high]
+//   add-hints <run-de-revue> <dossier-sécurité>      seconde passe : cross-hints.json -> candidats hint
+//   finalize <dossier-sécurité> --target <repo> [--threshold high] [--budget-exhausted]
 //       findings.json (schéma Cloudflare), validation, REPORT.md, FINDINGS-DETAIL.md, NEEDS-VALIDATION.md, summary.json
 // Codes : 0 ok ; 1 un confirmed atteint le seuil ; 2 échec définitif ; 3 configuration ; 4 validation refusée,
 // une réécriture permise (corriger les verdicts, relancer finalize une fois).
@@ -99,6 +100,32 @@ function prepare(runDir, secDir) {
   console.log(`prepare : ${out.length} candidats venus des seeds et indices, ${unresolved} non retrouvés`);
 }
 
+// --- add-hints : seconde passe, uniquement les pistes de la revue -----------
+function addHints(runDir, secDir) {
+  const meta = readJson(path.join(secDir, 'meta.json'));
+  const cands = readJson(path.join(secDir, 'candidates.json'), []);
+  if (!meta) die('meta.json manquant : lancer prepare');
+  const hints = readJson(path.join(runDir, 'cross-hints.json'), []);
+  const seen = new Set(cands.map((c) => `${c.file}:${c.line}`));
+  const added = [];
+  let unresolved = 0;
+  for (const h of Array.isArray(hints) ? hints : []) {
+    const l = lineOf(meta.repo, h.file, h.line);
+    if (!l) { unresolved++; continue; }
+    const line = l.text === undefined ? l.count : h.line;
+    if (seen.has(`${h.file}:${line}`)) continue;
+    seen.add(`${h.file}:${line}`);
+    const note = h.title || h.note || 'indice de sécurité';
+    const c = cand({ origin: 'hint', kind: 'other', title: note, claim: `Indice de la revue de code : ${note}`, file: h.file, line, quote: (l.text === undefined ? '' : l.text).trim() || '(ligne vide)', n: cands.length + 1 });
+    cands.push(c); added.push(c.n);
+  }
+  meta.cross_hints = cands.filter((c) => c.origin === 'hint').length;
+  meta.cross_hints_unresolved = (meta.cross_hints_unresolved || 0) + unresolved;
+  writeJson(path.join(secDir, 'meta.json'), meta);
+  writeJson(path.join(secDir, 'candidates.json'), cands);
+  console.log(`pistes ajoutées : ${added.length} (${added.join(',')})`);
+}
+
 // --- save-candidates -----------------------------------------------------
 function saveCandidates(secDir) {
   const meta = readJson(path.join(secDir, 'meta.json'));
@@ -161,7 +188,7 @@ function saveVerdict(secDir, n) {
 }
 
 // --- finalize ------------------------------------------------------------
-function build(c, v) {
+function build(c, v, budgetOut) {
   const fingerprint = `fast-${c.kind}-${sha(`${c.file}\n${c.quote}`).slice(0, 12)}`;
   const base = {
     fingerprint,
@@ -175,7 +202,7 @@ function build(c, v) {
   if (v && v.verdict === 'rejected') return { verdict: 'rejected', ...base, reason: v.reason };
   const blockers = [];
   if (nonEmpty(v && v.blocker)) blockers.push(v.blocker);
-  else if (!v) blockers.push('Vérification indépendante non réalisée.');
+  else if (!v) blockers.push(budgetOut && c.origin === 'hint' ? 'Budget atteint avant vérification.' : 'Vérification indépendante non réalisée.');
   if (c.origin === 'hint') blockers.push(BLOCKER_HINT);
   blockers.push(BLOCKER_FAST);
   const plan = (v && v.validation_plan) || {};
@@ -205,7 +232,7 @@ function md(findings) {
   return { report, detail, needs };
 }
 
-function finalize(secDir, target, threshold) {
+function finalize(secDir, target, threshold, budgetOut) {
   const meta = readJson(path.join(secDir, 'meta.json'));
   const cands = readJson(path.join(secDir, 'candidates.json'), []);
   if (!meta) die('meta.json manquant : lancer prepare');
@@ -215,7 +242,7 @@ function finalize(secDir, target, threshold) {
   const byFp = new Map();
   for (const c of cands) {
     const v = readJson(path.join(secDir, 'verify', `${c.n}.verdict.json`));
-    const f = build(c, v);
+    const f = build(c, v, budgetOut);
     if (!byFp.has(f.fingerprint)) byFp.set(f.fingerprint, f);
   }
   const findings = [...byFp.values()].sort((a, b) => (a.fingerprint < b.fingerprint ? -1 : 1));
@@ -231,8 +258,10 @@ function finalize(secDir, target, threshold) {
     fs.renameSync(file, path.join(secDir, 'findings.invalid.json'));
     writeJson(path.join(secDir, 'summary.json'), { confirmed: 0, needs_validation: 0, rejected: 0, cross_hints: summary.cross_hints, status: 'failed' });
     console.log(`sécurité : échec de validation. Dossier : ${secDir}`);
+    fs.writeFileSync(path.join(secDir, 'exit-code'), '2');
     process.exit(2);
   }
+  fs.rmSync(attemptsFile, { force: true });
   const m = md(findings);
   fs.writeFileSync(path.join(secDir, 'REPORT.md'), m.report);
   fs.writeFileSync(path.join(secDir, 'FINDINGS-DETAIL.md'), m.detail);
@@ -242,6 +271,7 @@ function finalize(secDir, target, threshold) {
   console.log(`Dossier : ${secDir}`);
   const min = SEV[threshold] || SEV.high;
   const hit = findings.some((f) => f.verdict === 'confirmed' && (SEV[f.severity] || 0) >= min);
+  fs.writeFileSync(path.join(secDir, 'exit-code'), hit ? '1' : '0');
   process.exit(hit ? 1 : 0);
 }
 
@@ -249,8 +279,9 @@ const [cmd, a, b] = process.argv.slice(2);
 const rest = process.argv.slice(2);
 const opt = (name) => { const i = rest.indexOf(name); return i >= 0 ? rest[i + 1] : undefined; };
 if (cmd === 'prepare' && a && b) prepare(path.resolve(a), path.resolve(b));
+else if (cmd === 'add-hints' && a && b) addHints(path.resolve(a), path.resolve(b));
 else if (cmd === 'save-candidates' && a) saveCandidates(path.resolve(a));
 else if (cmd === 'verifier-prompts' && a) verifierPrompts(path.resolve(a));
 else if (cmd === 'save-verdict' && a && b) saveVerdict(path.resolve(a), b);
-else if (cmd === 'finalize' && a && opt('--target')) finalize(path.resolve(a), path.resolve(opt('--target')), opt('--threshold'));
+else if (cmd === 'finalize' && a && opt('--target')) finalize(path.resolve(a), path.resolve(opt('--target')), opt('--threshold'), rest.includes('--budget-exhausted'));
 else die('usage: security-fast.cjs prepare|save-candidates|verifier-prompts|save-verdict|finalize ...');

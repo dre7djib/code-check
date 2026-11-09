@@ -6,7 +6,9 @@ Le répertoire du plugin est le dossier qui contient `agents/`. Sur un hôte où
 
 ## Ordre
 
-1. **Cadrage.** Un run de revue doit exister (`context.json`, `diff.patch`) : sinon skills `rules-loader` puis `scoping` (`--command security`). Code 3 : s'arrêter. `security.access` de `rules.yml` valant `none` : afficher « sécurité désactivée par rules.yml », écrire rien, sortir 0.
+0. **Accès.** `node <plugin>/scripts/check-access.cjs <repo> security`. Code 3 : message, sortir 3, aucun chasseur.
+1. **Cadrage.** Un run de revue doit exister (`context.json`, `diff.patch`) : sinon skills `rules-loader` puis `scoping` (`--command security`). Code 3 : s'arrêter.
+   Lancé par le directeur (`check`), le run existe déjà et c'est le sien : ne pas recalculer le diff.
 2. **Dossier.** `bash <plugin>/scripts/prepare-security-dir.sh <nom-du-repo> <run-id> <run>` (depuis le repo). Il imprime le dossier sécurité `<sec>`, `0700`.
 3. **Préparation.** `node <plugin>/scripts/security-fast.cjs prepare <run> <sec>` : seeds et pistes croisées deviennent des candidats, `hunter.prompt.md` est écrit.
 4. **Chasseur.** Agent `security-hunter`, contexte neuf. Message : le contenu de `<sec>/hunter.prompt.md`, rien d'autre. Sa réponse : `node <plugin>/scripts/security-fast.cjs save-candidates <sec>` (stdin). JSON illisible : le chasseur est en échec, `status: failed` après la validation, code 2 ; les candidats des seeds et indices restent vérifiés.
@@ -14,7 +16,9 @@ Le répertoire du plugin est le dossier qui contient `agents/`. Sur un hôte où
 6. **Écriture et validation.** `node <plugin>/scripts/security-fast.cjs finalize <sec> --target <repo> --threshold <thresholds.security_confirmed_min_severity>`. Il écrit `findings.json` trié par fingerprint, lance `scripts/validate-security.cjs` (validateur Cloudflare vendoré puis contrôles du dépôt cible), puis les markdown et `summary.json`.
    - Code 4 : validation refusée. Corriger **une fois** les champs refusés (renvoyer le verdict fautif via `save-verdict`), relancer `finalize`.
    - Code 2 : deuxième refus. `summary.json` dit `failed`, aucun markdown. Sortir 2.
-7. **Affichage.** Les compteurs de la dernière ligne de `finalize` et le chemin du dossier. Aucun titre, aucune citation, aucun chemin de fichier d'un finding dans le terminal.
+   - Appelé par le directeur : le premier passage ne connaît pas encore `cross-hints.json`. Quand la revue l'a écrit, le directeur relance **seulement** : `security-fast.cjs add-hints <run> <sec>`, `verifier-prompts`, un vérificateur par nouveau candidat, puis `finalize` (une fois, après les deux passes). Budget restant insuffisant : `finalize ... --budget-exhausted`.
+7. **Budget.** S'arrêter à `context.budget.max_minutes` depuis `created_at`. Si la session expose un usage, l'écrire dans `<run>/usage.json` (nombres seuls) et s'arrêter au-delà de `max_tokens` ; sinon la limite de temps est le seul coupe-circuit (`{"tokens":"unknown"}`).
+8. **Affichage.** Les compteurs de la dernière ligne de `finalize` et le chemin du dossier. Aucun titre, aucune citation, aucun chemin de fichier d'un finding dans le terminal.
 
 ## Interdits
 

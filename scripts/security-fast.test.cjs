@@ -121,7 +121,7 @@ test('validation refusée : une réécriture, puis failed, code 2, aucun markdow
   const c = JSON.parse(fs.readFileSync(cf, 'utf8'));
   c[0].file = 'src/inexistant/X.java';
   fs.writeFileSync(cf, JSON.stringify(c));
-  fs.rmSync(path.join(s.secDir, 'finalize.attempts'));
+  fs.rmSync(path.join(s.secDir, 'finalize.attempts'), { force: true });
   const r0 = fast(['finalize', s.secDir, '--target', s.repo]);
   assert.strictEqual(r0.status, 4);
   const r2 = fast(['finalize', s.secDir, '--target', s.repo]);

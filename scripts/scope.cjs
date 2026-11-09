@@ -81,6 +81,8 @@ function main() {
     stack,
     diff: { base, range, changed_lines: changed, files, touches_review_dir: touchesReview },
     axes: rules.axes_review,
+    security_access: rules.security_access,
+    budget: rules.budgets[mode],
     rules_sha256: rules.sha256,
     created_at: now.toISOString()
   };

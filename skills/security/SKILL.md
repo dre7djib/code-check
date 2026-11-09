@@ -8,6 +8,7 @@ disable-model-invocation: true
 
 Le répertoire du plugin est deux niveaux au-dessus de ce fichier. Le repo cible est le répertoire de travail de la session. Suivre la procédure de `agents/security/orchestrator.md` (lue, pas improvisée), dans cette conversation :
 
+0. `node <plugin>/scripts/check-access.cjs <repo> security` : code 3, afficher le message et sortir. `security.access: none` interdit la commande.
 1. Skills `rules-loader` puis `scoping` (`--command security`, `--host` = hôte de la session) si le run de revue n'existe pas ; sinon réutiliser le dernier. Code 3 : afficher le message, sortir avec 3.
 2. `bash <plugin>/scripts/prepare-security-dir.sh <nom-du-repo> <run-id> <run>` puis `node <plugin>/scripts/security-fast.cjs prepare <run> <sec>`.
 3. Lancer l'agent `security-hunter` de l'hôte (contexte neuf) avec le contenu de `<sec>/hunter.prompt.md`. Enregistrer sa réponse : `security-fast.cjs save-candidates <sec>`.

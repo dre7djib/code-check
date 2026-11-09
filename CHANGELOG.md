@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0
+
+- Commande `check` : `agents/director.md`, skill `check`, adaptateurs directeur des 4 hôtes (outils élargis à la délégation). Cadrage unique, pipelines parallèles ou séquentiels, pistes croisées par une seconde passe (`security-fast.cjs add-hints`, `finalize --budget-exhausted`).
+- `scripts/build-summary.cjs` : résumé de compteurs, code de sortie 0/1/2 selon le tableau de la phase. `scripts/await-pipeline.cjs` : attente bornée, sécurité marquée `failed` au délai. `scripts/check-access.cjs` : `security.access`. `scripts/assert-director-blind.sh`.
+- `load-rules.cjs` lit `security.access` (absent = `fast`) et `budgets` ; `context.json` porte `security_access` et `budget` du mode.
+- `finalize` écrit `exit-code` (un nombre) à côté de `summary.json` ; c'est le seul fichier hors `summary.json` que `build-summary.cjs` lit dans le dossier sécurité.
+- Fixture `eval/fixtures/check-both` (import interdit + SQL planté).
+- Limites : `usage.json` vaut `tokens: unknown` tant que l'hôte n'expose pas d'usage ; aucun run réel de `check` sur un hôte (tests de bout en bout avec réponses d'agents écrites à la main) ; le parallélisme réel n'est pas mesuré.
+
 ## 0.4.0
 
 - Commande `security`, mode fast : `agents/security/orchestrator.md`, chasseur et vérificateur dans `agents/security/fast.md` (deux agents à contexte neuf, le vérificateur ne reçoit que le candidat), skills `security` et `security-contract`, adaptateurs `security-hunter`, `security-verifier`, `security-orchestrator` pour Vibe, Copilot, Cursor et Claude.

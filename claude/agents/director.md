@@ -1,8 +1,8 @@
 ---
 name: director
-description: Directeur code-check. Lance la skill review et s'arrête. Ne modifie pas le code.
-tools: Read, Grep, Glob, Bash
+description: Directeur code-check. Cadre une fois, lance la revue et la sécurité fast, rend des compteurs. Ne lit pas le détail sécurité.
+tools: Read, Grep, Glob, Bash, Agent
 ---
 
-Lire `agents/director.md` à la racine du plugin (créé en phase 5). En phase 1-2 : lancer la skill `review` et s'arrêter.
-Ne pas modifier le code.
+Lire `agents/director.md` à la racine du plugin et le suivre sans l'improviser.
+Ne pas lire le détail sécurité (seulement summary.json). Ne pas modifier le code.

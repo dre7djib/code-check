@@ -60,8 +60,27 @@ function loadRules(repo) {
     throw new RulesError('rules.yml invalide : thresholds.security_confirmed_min_severity inconnu');
   }
 
+  // security.access : none | fast | deep ; absent = fast (comportement de la phase 4)
+  const sec = topBlock(lines, 'security');
+  const accLine = sec && sec.find((l) => /^\s+access:/.test(l));
+  const access = accLine ? accLine.split(':')[1].trim() : 'fast';
+  if (!['none', 'fast', 'deep'].includes(access)) throw new RulesError('rules.yml invalide : security.access inconnu');
+
+  // budgets.<mode>.max_minutes / max_tokens ; défauts des conventions
+  const budgets = { fast: { max_minutes: 5, max_tokens: 80000 }, standard: { max_minutes: 15, max_tokens: 250000 }, deep: { max_minutes: 90, max_tokens: 1500000 } };
+  const bb = topBlock(lines, 'budgets') || [];
+  for (const l of bb) {
+    const b = l.match(/^\s+(fast|standard|deep):\s*\{(.*)\}/);
+    if (!b) continue;
+    const mm = b[2].match(/max_minutes:\s*(\d+)/), mt = b[2].match(/max_tokens:\s*(\d+)/);
+    if (mm) budgets[b[1]].max_minutes = Number(mm[1]);
+    if (mt) budgets[b[1]].max_tokens = Number(mt[1]);
+  }
+
   return {
     path: file,
+    security_access: access,
+    budgets,
     version: 1,
     axes_review: axesReview,
     security_confirmed_min_severity: minSeverity,

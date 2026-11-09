@@ -1,0 +1,5 @@
+{
+  "review": [ { "axis": "architecture", "severity": "blocking", "rule": "layers.domain.forbidden_imports", "file": "src/main/java/com/acme/shop/domain/notify/OrderNotifier.java", "line": 3 } ],
+  "security": [ { "verdict": "needs_validation", "kind": "injection", "file": "src/main/java/com/acme/shop/adapters/persistence/ProductSearch.java", "line": 17 } ],
+  "exit": 1
+}
