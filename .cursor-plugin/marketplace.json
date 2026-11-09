@@ -1,0 +1,12 @@
+{
+  "name": "code-check-local",
+  "owner": { "name": "code-check" },
+  "metadata": { "description": "Marketplace local du plugin code-check." },
+  "plugins": [
+    {
+      "name": "code-check",
+      "source": ".",
+      "description": "Revue de code et revue de sécurité séparées, sur les postes de développement."
+    }
+  ]
+}

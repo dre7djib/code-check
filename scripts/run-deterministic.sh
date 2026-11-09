@@ -60,10 +60,7 @@ else
   fi
 fi
 
-if command -v gitleaks >/dev/null 2>&1; then
-  gitleaks stdin --report-format json --report-path "$RAW/gitleaks.json" --no-banner < "$(dirname "$CTX")/diff.patch" > "$RAW/gitleaks.txt" 2>&1 || true
-else
-  skip "gitleaks absent"
-fi
+# Secrets : détecteur intégré, toujours exécuté (aucun outil à installer).
+node "$HERE/scan-secrets.cjs" "$(dirname "$CTX")/diff.patch" "$RAW/secrets-builtin.json" > "$RAW/secrets-builtin.txt" 2>&1 || skip "détecteur de secrets intégré en échec"
 
 node "$HERE/parse-deterministic.cjs" "$CTX" "$OUT"

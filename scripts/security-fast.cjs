@@ -73,7 +73,7 @@ function prepare(runDir, secDir) {
     out.push(cand({ origin, kind: o.kind, title: o.title, claim: o.claim, file: o.file, line, quote: text }));
   };
   for (const s of Array.isArray(seeds) ? seeds : []) {
-    const secret = /secret|fuite|gitleaks|token|cl[ée]/i.test(`${s.title} ${s.evidence}`);
+    const secret = /secret|fuite|gitleaks|token|jeton|cl[ée]|identifiant/i.test(`${s.title} ${s.evidence}`);
     push({ kind: secret ? 'secret' : 'cve', file: s.file, line: s.line, title: s.title, claim: `Seed déterministe : ${s.title} (${s.evidence}).` }, 'seed');
   }
   for (const h of Array.isArray(hints) ? hints : []) {

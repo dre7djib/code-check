@@ -36,7 +36,7 @@ review/{findings/<axe>.json,merged.json,REVIEW.md,REVIEW-DETAIL.md}
 
 Codes de sortie : 0 rien de bloquant, 1 au moins un `blocking`, 2 un axe a échoué sans bloquant, 3 configuration invalide (pas de `rules.yml`, délégation indisponible sur l'hôte).
 
-Les outils déterministes ne sont pas embarqués : ArchUnit (test `*Architecture*` du repo), dependency-cruiser (devDependency + config du repo), gitleaks (sur le PATH). Absent = skip noté dans `deterministic/raw/skipped.txt`.
+Les outils déterministes ne sont pas embarqués : ArchUnit (test `*Architecture*` du repo), dependency-cruiser (devDependency + config du repo), un détecteur de secrets intégré (`scripts/scan-secrets.cjs`, sans dépendance, lignes ajoutées du diff seulement) tourne toujours : aucun outil de secrets à installer. Absent = skip noté dans `deterministic/raw/skipped.txt`.
 
 `rules.yml` est versionné, propriété de l'équipe du repo. `.review/runs/` est à ignorer par git.
 

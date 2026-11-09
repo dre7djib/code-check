@@ -1,5 +1,10 @@
 # Changelog
 
+## Non publié
+
+- Détecteur de secrets intégré `scripts/scan-secrets.cjs` (clés AWS, clés privées, jetons GitHub/Slack/Stripe/Google, JWT, identifiants dans une URL, affectations littérales à entropie suffisante, placeholders ignorés). Il lit les lignes ajoutées du diff, donne la ligne du fichier, et ne recopie jamais la valeur. Il alimente `security-seeds.json` ; gitleaks n'est plus appelé (sa lecture d'un `gitleaks.json` déposé à la main reste). Avant : sans gitleaks, aucun secret n'était détecté, et gitleaks lancé sur le patch ne donnait pas de chemin de fichier exploitable.
+- Limite : détection par motifs, sans l'historique git ; le chasseur sécurité reste le second filet.
+
 ## 0.5.0
 
 - Commande `check` : `agents/director.md`, skill `check`, adaptateurs directeur des 4 hôtes (outils élargis à la délégation). Cadrage unique, pipelines parallèles ou séquentiels, pistes croisées par une seconde passe (`security-fast.cjs add-hints`, `finalize --budget-exhausted`).

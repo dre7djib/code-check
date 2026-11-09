@@ -149,7 +149,7 @@ function parseGitleaks(text) {
   let j;
   try { j = JSON.parse(text); } catch { return; }
   for (const r of Array.isArray(j) ? j : []) {
-    seeds.push({ file: r.File || 'diff.patch', line: r.StartLine || 1, title: r.Description || r.RuleID || 'fuite détectée', evidence: r.RuleID || 'gitleaks' });
+    seeds.push({ file: path.isAbsolute(r.File || '') ? path.relative(repo, r.File) : (r.File || 'diff.patch'), line: r.StartLine || 1, title: r.Description || r.RuleID || 'fuite détectée', evidence: r.RuleID || 'gitleaks' });
   }
 }
 
@@ -176,7 +176,12 @@ if ((t = raw('archunit.txt'))) parseArchUnit(t);
 if ((t = raw('depcruise.json'))) parseDepcruise(t);
 unpinned();
 if ((t = raw('npm-audit.json'))) parseNpmAudit(t);
+if ((t = raw('secrets-builtin.json'))) parseGitleaks(t);
 if ((t = raw('gitleaks.json'))) parseGitleaks(t);
+{ // une même position signalée par deux détecteurs ne fait qu'une seed
+  const k = new Set();
+  for (let i = seeds.length - 1; i >= 0; i--) { const key = `${seeds[i].file}:${seeds[i].line}`; if (k.has(key)) seeds.splice(i, 1); else k.add(key); }
+}
 if ((t = raw('lint.txt'))) parseLint(t);
 
 const errs = validateFile(findings);
