@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Correctif Windows : les validateurs Cloudflare (`validate-findings.cjs`, `validate-coverage-ledger.cjs`) n'exigent plus `O_NOFOLLOW`/`O_NONBLOCK` (absents sous Node Windows). Sur `win32`, ouverture avec contrôle d'identité `(dev, ino)` avant/après `open` (port de [cloudflare/security-audit-skill#145](https://github.com/cloudflare/security-audit-skill/pull/145)). Sans ce correctif, la validation échoue systématiquement avec le code 2 (« OS no-follow and nonblocking input protection is unavailable »).
+
 ## 0.6.0
 
 - Commande `security-deep` : `agents/security/deep.md` (enveloppe : accès, prérequis, cadrage, dossier, confirmation du parallélisme, sandbox, échéance, clôture) puis skill Cloudflare complète, skill `security-deep`, adaptateurs `security-deep`, `security-deep-research`, `security-deep-general` pour les 4 hôtes.
