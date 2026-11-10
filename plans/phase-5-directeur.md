@@ -13,7 +13,7 @@ La commande `check` cadre une fois, lance la revue et la sécurité fast, route 
 
 ## Hors périmètre
 
-- Mode deep (phase 6). Le directeur refuse un argument deep avec le message « utiliser la commande security-deep », il ne le simule pas.
+- Mode deep (phase 6). Le directeur `check` refuse un argument deep avec le message « utiliser check-deep ou security-deep », il ne le simule pas. La commande `check-deep` (directeur-deep) lance revue + deep.
 - Fusion des deux rapports dans un seul markdown.
 - Donner au directeur les `title` ou les `quote` de la sécurité.
 

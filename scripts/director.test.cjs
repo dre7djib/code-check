@@ -126,17 +126,59 @@ test('pistes croisées : add-hints ne vérifie que les nouvelles ; budget épuis
   assert.match(r.stdout, /Pistes croisées → 2 transmises à la sécurité/);
 });
 
-test('security.access : none refuse security et check, pas review ; security-deep exige deep', () => {
+test('security.access : none refuse security et check, pas review ; security-deep et check-deep exigent deep', () => {
   const s = setup();
   const rules = path.join(s.repo, '.review', 'rules.yml');
   const set = (v) => fs.writeFileSync(rules, fs.readFileSync(rules, 'utf8').replace(/access: \w+/, `access: ${v}`));
   const ck = (c) => js('check-access.cjs', [s.repo, c]).status;
+  const cmds = ['review', 'security', 'check', 'security-deep', 'check-deep'];
   set('none');
-  assert.deepStrictEqual(['review', 'security', 'check', 'security-deep'].map(ck), [0, 3, 3, 3]);
+  assert.deepStrictEqual(cmds.map(ck), [0, 3, 3, 3, 3]);
   set('fast');
-  assert.deepStrictEqual(['review', 'security', 'check', 'security-deep'].map(ck), [0, 0, 0, 3]);
+  assert.deepStrictEqual(cmds.map(ck), [0, 0, 0, 3, 3]);
   set('deep');
-  assert.deepStrictEqual(['review', 'security', 'check', 'security-deep'].map(ck), [0, 0, 0, 0]);
+  assert.deepStrictEqual(cmds.map(ck), [0, 0, 0, 0, 0]);
+});
+
+test('scope check-deep : mode deep et budget deep ; check reste hors deep', () => {
+  const s = setup();
+  const rules = path.join(s.repo, '.review', 'rules.yml');
+  fs.writeFileSync(rules, fs.readFileSync(rules, 'utf8').replace(/access: \w+/, 'access: deep'));
+  // Attendre 1 s : run-id = timestamp UTC à la seconde, sinon collision avec s.run.
+  const start = Date.now();
+  while (Date.now() - start < 1100) { /* pause */ }
+  const deepCheck = js('scope.cjs', [s.repo, '--command', 'check-deep', '--host', 'claude']);
+  assert.strictEqual(deepCheck.status, 0, deepCheck.stderr);
+  const deepRun = deepCheck.stdout.trim();
+  assert.notStrictEqual(deepRun, s.run);
+  const ctx = JSON.parse(fs.readFileSync(path.join(deepRun, 'context.json'), 'utf8'));
+  assert.strictEqual(ctx.command, 'check-deep');
+  assert.strictEqual(ctx.mode, 'deep');
+  assert.deepStrictEqual(ctx.budget, { max_minutes: 90, max_tokens: 1500000 });
+  const checkCtx = JSON.parse(fs.readFileSync(path.join(s.run, 'context.json'), 'utf8'));
+  assert.strictEqual(checkCtx.command, 'check');
+  assert.notStrictEqual(checkCtx.mode, 'deep');
+});
+
+test('check-deep : adaptateurs et skill présents ; check ne lance pas le deep', () => {
+  for (const f of [
+    'agents/director-deep.md',
+    'skills/check-deep/SKILL.md',
+    'cursor/agents/director-deep.md',
+    'claude/agents/director-deep.md',
+    'com.github.copilot/agents/director-deep.agent.md',
+    'ai.mistral.vibe/agents/director-deep.toml'
+  ]) assert.ok(fs.existsSync(path.join(root, f)), f);
+  const skill = fs.readFileSync(path.join(root, 'skills/check-deep/SKILL.md'), 'utf8');
+  const dir = fs.readFileSync(path.join(root, 'agents/director-deep.md'), 'utf8');
+  assert.match(skill, /director-deep\.md/);
+  assert.match(dir, /agents\/security\/deep\.md/);
+  assert.match(dir, /Ne pas lancer.*add-hints|Pas de pistes croisées/);
+  assert.match(fs.readFileSync(path.join(root, '.claude-plugin/plugin.json'), 'utf8'), /director-deep\.md/);
+  for (const f of ['agents/director.md', 'skills/check/SKILL.md']) {
+    assert.match(fs.readFileSync(path.join(root, f), 'utf8'), /check-deep/);
+    assert.doesNotMatch(fs.readFileSync(path.join(root, f), 'utf8').replace(/security-deep|check-deep/g, ''), /deep\.md|finalize-deep|check-deep-prereqs/, f);
+  }
 });
 
 test('scope : context porte security_access et le budget du mode', () => {

@@ -12,6 +12,7 @@
   ],
   "agents": [
     "./claude/agents/director.md",
+    "./claude/agents/director-deep.md",
     "./claude/agents/review-architecture.md",
     "./claude/agents/review-errors.md",
     "./claude/agents/review-naming.md",

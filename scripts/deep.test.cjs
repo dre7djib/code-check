@@ -129,21 +129,27 @@ test('ledger invalide ou rapport manquant : failed', () => {
   assert.match(f, /REPORT\.md absent/);
 });
 
-test('scope : security-deep donne mode deep et budget deep ; check ne crée pas de ledger', () => {
+test('scope : security-deep et check-deep donnent mode deep ; check ne crée pas de ledger', () => {
   const d = fs.mkdtempSync(path.join(os.tmpdir(), 'cc-dscope-'));
   const repo = path.join(d, 'shop');
   sh('bash', [path.join(root, 'eval', 'setup-fixture.sh'), 'security-fast', repo]);
   const ctx = (cmd) => JSON.parse(fs.readFileSync(path.join(js('scope.cjs', [repo, '--command', cmd, '--host', 'claude']).stdout.trim(), 'context.json'), 'utf8'));
-  const deep = ctx('security-deep');
-  assert.strictEqual(deep.mode, 'deep');
-  assert.deepStrictEqual(deep.budget, { max_minutes: 90, max_tokens: 1500000 });
+  for (const cmd of ['security-deep', 'check-deep']) {
+    const deep = ctx(cmd);
+    assert.strictEqual(deep.mode, 'deep', cmd);
+    assert.strictEqual(deep.command, cmd);
+    assert.deepStrictEqual(deep.budget, { max_minutes: 90, max_tokens: 1500000 }, cmd);
+  }
   assert.notStrictEqual(ctx('check').mode, 'deep');
   const found = sh('find', [d, '-name', 'coverage-ledger.json']).stdout.trim();
   assert.strictEqual(found, '');
 });
 
-test('l’orchestrateur et les skills ne branchent le deep que sur security-deep', () => {
+test('check (fast) ne branche pas le deep ; check-deep et security-deep oui', () => {
   for (const f of ['agents/director.md', 'skills/check/SKILL.md', 'skills/security/SKILL.md', 'agents/security/orchestrator.md']) {
-    assert.doesNotMatch(fs.readFileSync(path.join(root, f), 'utf8').replace(/security-deep/g, ''), /deep\.md|check-deep-prereqs|finalize-deep/, f);
+    assert.doesNotMatch(fs.readFileSync(path.join(root, f), 'utf8').replace(/security-deep|check-deep/g, ''), /deep\.md|check-deep-prereqs|finalize-deep/, f);
   }
+  assert.match(fs.readFileSync(path.join(root, 'agents/security/deep.md'), 'utf8'), /check-deep/);
+  assert.match(fs.readFileSync(path.join(root, 'agents/director-deep.md'), 'utf8'), /check-deep-prereqs/);
+  assert.match(fs.readFileSync(path.join(root, 'agents/director-deep.md'), 'utf8'), /agents\/security\/deep\.md/);
 });

@@ -2,12 +2,13 @@
 
 Rôle : poser le cadre (prérequis, dossier, budget, sandbox, validation), puis suivre la skill `skills/security-audit/SKILL.md` **telle quelle** pour les six phases. Ne pas les résumer à la place de la skill, ne pas réécrire ses prompts de chasse, ne pas réutiliser le chasseur ou le vérificateur de `fast.md` comme substitut.
 
-Le deep n'est lancé que par la commande `security-deep`, jamais par `check`, le hook ou un autre pipeline.
+Le deep est lancé par `security-deep` (seul) ou par `check-deep` (via le directeur, run déjà cadré). Jamais par `check`, le hook, ni le pipeline fast.
 
 Le répertoire du plugin est le dossier qui contient `agents/`. Droits : lire, chercher, shell des scripts du plugin, déléguer. Écrit uniquement dans le dossier sécurité. Ne modifie jamais le code.
 
 ## Ordre
 
+0. **Run fourni (`check-deep`).** Si le message donne un chemin de run existant (`context.json` présent) et indique « déjà cadré par check-deep » : sauter accès, prérequis et cadrage (faits par le directeur). Utiliser ce run et le `prereqs.json` fourni. Aller à l'étape Dossier. Sinon (commande `security-deep` seule) :
 1. **Accès.** `node <plugin>/scripts/check-access.cjs <repo> security-deep` (`security.access: deep` exigé). Code 3 : message, sortir 3, aucun agent.
 2. **Prérequis.** `bash <plugin>/scripts/check-deep-prereqs.sh > <tmp>/prereqs.json`. Code 3 : message, sortir 3, **aucun dossier sécurité créé**, aucun agent. Sandbox **présent par défaut**. Pour le bloquer : `CODE_CHECK_SANDBOX=off` (ou `absent` / `false` / `0` / `disabled` / `none` / `block`) → mode dégradé (étape 7).
 3. **Cadrage.** Skills `rules-loader` puis `scoping` (`--command security-deep`) : `mode: deep`, `budget` du mode deep. Repo complet, pas le diff.
@@ -20,7 +21,7 @@ Le répertoire du plugin est le dossier qui contient `agents/`. Droits : lire, c
 
 ## Interdits
 
-- Lancer le deep depuis `check`, le hook ou une autre commande.
+- Lancer le deep depuis `check` (fast), le hook, ou recalculer le cadrage quand `check-deep` a déjà fourni le run.
 - Chasse ou vérification dans la même conversation que l'orchestrateur ; simuler le deep dans un seul contexte.
 - Écrire `confirmed` sans sandbox, éditer `skills/security-audit/`, écrire un schéma de finding parallèle.
 - Copier `architecture.md`, le ledger ou un rapport hors du dossier sécurité, dans le code ou dans `REVIEW.md`.

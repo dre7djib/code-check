@@ -17,7 +17,7 @@ Ce qui est partagé, et qui ne se réécrit pas par hôte : `rules.yml`, les sch
 
 Les skills sont des enfants directs de `skills/<nom>/SKILL.md`. Agent Plugins 1.0 ne cherche pas de skill dans un sous-dossier plus profond. `skills/review/architecture/SKILL.md` ne serait chargé par personne.
 
-Commandes métier, chacune une skill invocable par l'utilisateur : `review`, `check`, `security`, `security-deep`, `review-fix`. Le préfixe affiché dépend de l'hôte. On le relève sur la machine (`/plugins` côté Vibe, l'écran plugins côté Copilot) et on le copie dans le README. On ne l'invente pas. Repères actuels, à revérifier le jour de l'install :
+Commandes métier, chacune une skill invocable par l'utilisateur : `review`, `check`, `check-deep`, `security`, `security-deep`, `review-fix`. Le préfixe affiché dépend de l'hôte. On le relève sur la machine (`/plugins` côté Vibe, l'écran plugins côté Copilot) et on le copie dans le README. On ne l'invente pas. Repères actuels, à revérifier le jour de l'install :
 
 | Hôte | Forme attendue |
 |---|---|
@@ -26,7 +26,7 @@ Commandes métier, chacune une skill invocable par l'utilisateur : `review`, `ch
 | Claude Code | `/code-check:review` |
 | Cursor | la chaîne affichée par Cursor le jour de l'install, copiée dans le README |
 
-`disable-model-invocation: true` sur les cinq commandes : elles ne partent que sur demande explicite. Les skills internes (cadrage, règles, rapport, reviewers) ont `user-invocable: false`.
+`disable-model-invocation: true` sur les six commandes : elles ne partent que sur demande explicite. Les skills internes (cadrage, règles, rapport, reviewers) ont `user-invocable: false`.
 
 Langue des prompts maison et des rapports : français. Les skills vendored restent dans leur langue. Le reviewer qui les enveloppe traduit vers le schéma interne.
 
@@ -90,7 +90,7 @@ Revue et sécurité, dans le même run du repo cible, non commitées :
 |---|---|---|---|---|
 | `fast` | hook, ou diff ≤ 200 lignes et aucun fichier sous `.review/` | architecture, nommage, erreurs | non, sauf `/security` | 5 min, 80 000 tokens |
 | `standard` | `/review`, `/check` au-delà du seuil fast | axes fast + tests + simplicité (dès la phase 3) | fast si la commande est `/check` ou `/security` | 15 min, 250 000 tokens |
-| `deep` | `/security-deep` seulement, jamais automatique | identique à standard si la commande est `/check` avec argument deep | skill Cloudflare, repo complet | 90 min, 1 500 000 tokens |
+| `deep` | `/security-deep` ou `/check-deep`, jamais automatique ni via `/check` | axes de `rules.yml` si `/check-deep` | skill Cloudflare, repo complet | 90 min, 1 500 000 tokens |
 
 Le dépassement de budget arrête le pipeline concerné, écrit ce qu'il a, et remonte un échec partiel. Il ne bascule pas en deep.
 

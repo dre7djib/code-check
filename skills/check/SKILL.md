@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Le répertoire du plugin est deux niveaux au-dessus de ce fichier. Le repo cible est le répertoire de travail de la session. Suivre la procédure de `agents/director.md` (lue, pas improvisée), dans cette conversation :
 
-1. Argument `deep` : « utiliser la commande security-deep », code 3.
+1. Argument `deep` : « utiliser la commande check-deep (revue + deep) ou security-deep (deep seul) », code 3.
 2. `node <plugin>/scripts/check-access.cjs <repo> check` (code 3 : message, sortie).
 3. Skills `rules-loader` puis `scoping` (`--command check`, `--host` = hôte de la session), une seule fois.
 4. Suivre `agents/review/orchestrator.md` (skill `review`) et `agents/security/orchestrator.md` (skill `security`) sur le même run, chacun avec des agents à contexte neuf ; en parallèle si l'hôte sait ouvrir deux contextes, sinon à la suite (`--sequential`). Hôte sans contexte neuf : code 3, « délégation indisponible sur cet hôte ».

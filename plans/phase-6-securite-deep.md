@@ -75,7 +75,7 @@ Contrôle télémétrie : `rg` sur la copie pour `http://`, `https://`, et les h
 
 Ordre : prérequis, `prepare-security-dir.sh`, puis le corps de la skill en lui donnant le dossier de sortie. Budget `deep` des conventions. À l'échéance : valider ce qui est déjà écrit, marquer le ledger comme incomplet si la skill a un statut pour ça, sinon `status: failed` et conserver les fichiers partiels dans le dossier sécurité. Ne pas relancer.
 
-Le résumé `summary.json` suit le même schéma que le fast, pour que le directeur puisse afficher des compteurs le jour où un humain lance deep puis check. En v1, `/security-deep` affiche les compteurs lui-même. `/check` ne l'appelle pas.
+Le résumé `summary.json` suit le même schéma que le fast, pour que le directeur puisse afficher des compteurs. `/check-deep` lance revue + deep sur un même run. `/check` (fast) ne l'appelle pas.
 
 ### 4. Run pilote
 
