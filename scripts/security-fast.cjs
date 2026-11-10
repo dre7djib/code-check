@@ -7,13 +7,14 @@
 //   save-verdict <dossier-sécurité> <n>              stdin : verdict JSON -> verify/<n>.verdict.json
 //   add-hints <run-de-revue> <dossier-sécurité>      seconde passe : cross-hints.json -> candidats hint
 //   finalize <dossier-sécurité> --target <repo> [--threshold high] [--budget-exhausted]
-//       findings.json (schéma Cloudflare), validation, REPORT.md, FINDINGS-DETAIL.md, NEEDS-VALIDATION.md, summary.json
+//       findings.json (schéma Cloudflare), validation, REPORT.md, FINDINGS-DETAIL.md, NEEDS-VALIDATION.md, PRIORITIES.md, summary.json
 // Codes : 0 ok ; 1 un confirmed atteint le seuil ; 2 échec définitif ; 3 configuration ; 4 validation refusée,
 // une réécriture permise (corriger les verdicts, relancer finalize une fois).
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { validate, safeRel } = require('./validate-security.cjs');
+const { writePriorities, locLink } = require('./build-priorities.cjs');
 const { resolveSandbox } = require('./sandbox-status.cjs');
 
 const KINDS = ['injection', 'deserialization', 'secret', 'access-control', 'cve', 'other'];
@@ -256,21 +257,22 @@ function build(c, v, budgetOut, sandboxOn) {
   };
 }
 
-function md(findings) {
+function md(findings, secDir, repo) {
   const by = (k) => findings.filter((f) => f.verdict === k);
-  const nv = by('needs_validation'), cf = by('confirmed'), rj = by('rejected');
-  const list = (a) => a.map((f) => `- \`${f.fingerprint}\` — ${f.title} (${f.evidence[0].file}:${f.evidence[0].line})`).join('\n') || '- aucune';
+  const nv = by('needs_validation'), cf = by('confirmed');
+  const link = (e) => locLink(secDir, repo, e.file, e.line);
+  const list = (a) => a.map((f) => `- \`${f.fingerprint}\` — ${f.title} (${link(f.evidence[0])})`).join('\n') || '- aucune';
   const report = ['# Rapport sécurité (mode fast)', '',
-    `confirmed : ${cf.length} · needs_validation : ${nv.length} · rejected : ${rj.length}`, '',
+    `confirmed : ${cf.length} · needs_validation : ${nv.length} · rejected : ${by('rejected').length}`, '',
     '## Confirmés', list(cf), '', '## À valider', list(nv), '',
-    'Les pistes à valider sont détaillées dans `NEEDS-VALIDATION.md`. Sandbox bloqué → jamais de confirmed.', ''].join('\n');
+    'Priorisation P1/P2/P3 : `PRIORITIES.md`. Détail des pistes : `NEEDS-VALIDATION.md`. Sandbox bloqué → jamais de confirmed.', ''].join('\n');
   const detail = ['# Détail des findings', '', ...findings.flatMap((f) => [
     `## ${f.title}`, `- fingerprint : \`${f.fingerprint}\``, `- verdict : ${f.verdict}`, `- description : ${f.description}`,
     `- cause : ${f.claimed_root_cause || f.root_cause}`,
-    ...f.evidence.map((e) => `- preuve : ${e.file}:${e.line} — ${e.description}`),
+    ...f.evidence.map((e) => `- preuve : ${link(e)} — ${e.description}`),
     ...(f.reason ? [`- raison du rejet : ${f.reason}`] : []), ''])].join('\n');
   const needs = ['# Pistes à valider', '', ...nv.flatMap((f) => [
-    `## ${f.title}`, `- ${f.evidence[0].file}:${f.evidence[0].line}`,
+    `## ${f.title}`, `- ${link(f.evidence[0])}`,
     ...f.blockers.map((b) => `- bloqueur : ${b}`),
     `- plan local : ${f.validation_plan.local}`, ...(f.validation_plan.deployment ? [`- plan de déploiement : ${f.validation_plan.deployment}`] : []), ''])].join('\n');
   return { report, detail, needs };
@@ -298,7 +300,7 @@ function finalize(secDir, target, threshold, budgetOut) {
   const summary = { confirmed: count('confirmed'), needs_validation: count('needs_validation'), rejected: count('rejected'), cross_hints: meta.cross_hints || 0, status: 'ok' };
   if (errs.length) {
     for (const e of errs) console.error('ERROR:', e);
-    for (const n of ['REPORT.md', 'FINDINGS-DETAIL.md', 'NEEDS-VALIDATION.md']) fs.rmSync(path.join(secDir, n), { force: true });
+    for (const n of ['REPORT.md', 'FINDINGS-DETAIL.md', 'NEEDS-VALIDATION.md', 'PRIORITIES.md']) fs.rmSync(path.join(secDir, n), { force: true });
     if (attempts < 2) { console.error('validation refusée : corriger les verdicts et relancer finalize une fois.'); process.exit(4); }
     fs.renameSync(file, path.join(secDir, 'findings.invalid.json'));
     writeJson(path.join(secDir, 'summary.json'), { confirmed: 0, needs_validation: 0, rejected: 0, cross_hints: summary.cross_hints, status: 'failed' });
@@ -307,10 +309,11 @@ function finalize(secDir, target, threshold, budgetOut) {
     process.exit(2);
   }
   fs.rmSync(attemptsFile, { force: true });
-  const m = md(findings);
+  const m = md(findings, secDir, target);
   fs.writeFileSync(path.join(secDir, 'REPORT.md'), m.report);
   fs.writeFileSync(path.join(secDir, 'FINDINGS-DETAIL.md'), m.detail);
   fs.writeFileSync(path.join(secDir, 'NEEDS-VALIDATION.md'), m.needs);
+  writePriorities(secDir, target, findings);
   writeJson(path.join(secDir, 'summary.json'), summary);
   console.log(`sécurité : confirmed ${summary.confirmed} · needs_validation ${summary.needs_validation} · rejected ${summary.rejected} · pistes croisées ${summary.cross_hints}${sandboxOn ? '' : ' · sandbox absent (pas de confirmed)'}`);
   console.log(`Dossier : ${secDir}`);

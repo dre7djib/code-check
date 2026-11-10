@@ -89,6 +89,7 @@ test('sandbox absent : un confirmed est refusé, status failed, code 2', () => {
   assert.strictEqual(r.status, 2, r.stdout + r.stderr);
   assert.strictEqual(summary(s).status, 'failed');
   assert.match(fs.readFileSync(path.join(s.sec, 'failure.txt'), 'utf8'), /confirmed interdit/);
+  assert.ok(!fs.existsSync(path.join(s.sec, 'PRIORITIES.md')));
 });
 
 test('sandbox present : confirmed accepté ; au seuil -> code 1', () => {
@@ -97,6 +98,10 @@ test('sandbox present : confirmed accepté ; au seuil -> code 1', () => {
   assert.strictEqual(r.status, 1, r.stderr);
   assert.strictEqual(summary(s).confirmed, 1);
   assert.strictEqual(summary(s).status, 'ok');
+  const prio = fs.readFileSync(path.join(s.sec, 'PRIORITIES.md'), 'utf8');
+  assert.match(prio, /## P1 — Critique/);
+  assert.match(prio, /Injection dans la recherche produit/);
+  assert.match(prio, new RegExp(`\\[${SQL.replace(/\./g, '\\.')}:17\\]\\([^)]+#L17\\)`));
   const r2 = fin(s, ['--threshold', 'critical']);
   assert.strictEqual(r2.status, 0);
 });

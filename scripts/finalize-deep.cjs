@@ -11,6 +11,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { validate } = require('./validate-security.cjs');
+const { writePriorities } = require('./build-priorities.cjs');
 
 const sec = path.resolve(process.argv[2] || '');
 const a = process.argv.slice(3);
@@ -33,10 +34,11 @@ if (fs.existsSync(ledger)) {
 
 const fj = path.join(sec, 'findings.json');
 let findings = [];
+let findingsOk = false;
 if (fs.existsSync(fj)) {
   const errs = validate(fj, path.resolve(target), { allowConfirmed: sandbox });
   if (errs.length) problems.push(...errs.slice(0, 5).map((e) => `findings.json : ${e}`));
-  else findings = readJson(fj) || [];
+  else { findings = readJson(fj) || []; findingsOk = true; }
 } else problems.push('findings.json absent');
 
 if (meta.run_status && meta.run_status !== 'completed') problems.push(`run_status ${meta.run_status}`);
@@ -47,6 +49,8 @@ const failed = problems.length > 0;
 const summary = { confirmed: count('confirmed'), needs_validation: count('needs_validation'), rejected: count('rejected'), cross_hints: 0, status: failed ? 'failed' : 'ok' };
 fs.writeFileSync(path.join(sec, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
 if (failed) fs.writeFileSync(path.join(sec, 'failure.txt'), problems.join('\n') + '\n');
+if (findingsOk) writePriorities(sec, path.resolve(target), findings);
+else fs.rmSync(path.join(sec, 'PRIORITIES.md'), { force: true });
 const min = SEV[opt('--threshold')] || SEV.high;
 const hit = findings.some((f) => f.verdict === 'confirmed' && (SEV[f.severity && f.severity.overall_severity] || 0) >= min);
 const code = hit ? 1 : failed ? 2 : 0;

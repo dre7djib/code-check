@@ -47,9 +47,11 @@ Commande `security`. Un chasseur lit le diff, un vérificateur à contexte neuf 
 Sortie dans le même run que la revue : `<repo>/.review/runs/<run-id>/security/` en `0700` :
 
 ```
-findings.json  REPORT.md  FINDINGS-DETAIL.md  NEEDS-VALIDATION.md  summary.json
+findings.json  REPORT.md  FINDINGS-DETAIL.md  NEEDS-VALIDATION.md  PRIORITIES.md  summary.json
 meta.json  candidates.json  verify/<n>.{prompt.md,verdict.json}
 ```
+
+`PRIORITIES.md` classe les failles en **P1 / P2 / P3** (sévérité confirmée, ou priorité provisoire pour `needs_validation`). Chaque emplacement est un lien markdown relatif (`fichier#Llignes`) cliquable vers la ligne concernée.
 
 Layout unifié d'un run `check` :
 
@@ -65,7 +67,7 @@ Ajouter `.review/runs/` au `.gitignore` du repo (le plugin ne le fait pas). Le t
 
 ## Commande `security-deep`
 
-Audit complet du dépôt par la skill Cloudflare (six phases, agents isolés en parallèle). Jamais lancé par `check` ni par un hook. Exige `security.access: deep` dans `rules.yml`, Node ≥ 18 et un hôte qui sait déléguer en parallèle (sinon code 3, « deep indisponible sur cet hôte »). Sortie dans `<run>/security/` (`findings.json`, `architecture.md`, `coverage-ledger.json`, trois rapports, `summary.json`), en `0700`.
+Audit complet du dépôt par la skill Cloudflare (six phases, agents isolés en parallèle). Jamais lancé par `check` ni par un hook. Exige `security.access: deep` dans `rules.yml`, Node ≥ 18 et un hôte qui sait déléguer en parallèle (sinon code 3, « deep indisponible sur cet hôte »). Sortie dans `<run>/security/` (`findings.json`, `architecture.md`, `coverage-ledger.json`, trois rapports, `PRIORITIES.md`, `summary.json`), en `0700`.
 
 Le sandbox s'applique à **toute** la sécurité (`security`, `check`, `security-deep`) via `scripts/sandbox-status.cjs` / `prereqs.json`. **Présent par défaut.** Pour le bloquer (jamais de `confirmed`) : `CODE_CHECK_SANDBOX=off` (aussi `absent`, `false`, `0`, `disabled`, `none`, `block`). Optionnel : préfixe d'isolement OS, par ex. macOS `CODE_CHECK_SANDBOX="sandbox-exec -p '(version 1)(allow default)(deny network*)'"` ; alors `present` seulement s'il isole vraiment (réseau refusé).
 

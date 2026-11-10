@@ -76,6 +76,7 @@ Revue et sécurité, dans le même run du repo cible, non commitées :
     REPORT.md
     FINDINGS-DETAIL.md
     NEEDS-VALIDATION.md
+    PRIORITIES.md                         # P1/P2/P3 + liens fichier#Llignes
     coverage-ledger.json                  # deep seulement
 ```
 

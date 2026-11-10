@@ -42,7 +42,7 @@ L'enveloppe ne les résume pas à la place de la skill. Elle impose le cadre aut
 3. Chaque candidat unique part vers un vérificateur neuf.
 4. `findings.json`, puis `validate-findings.cjs --target`.
 5. Vérification indépendante des enregistrements. Un remplacement matériel relance un vérificateur.
-6. `REPORT.md`, `FINDINGS-DETAIL.md`, `NEEDS-VALIDATION.md` dérivés des enregistrements vérifiés.
+6. `REPORT.md`, `FINDINGS-DETAIL.md`, `NEEDS-VALIDATION.md` dérivés des enregistrements vérifiés ; `PRIORITIES.md` (P1/P2/P3, liens cliquables) écrit par `finalize-deep.cjs`.
 
 Les rapports restent dans `.review/<nom-du-repo>/runs/`, en `0700`, gitignorés. `architecture.md` et le ledger y restent aussi : ils décrivent la surface d'attaque. Rien de ce dossier n'est copié dans le code applicatif ni dans `REVIEW.md`.
 

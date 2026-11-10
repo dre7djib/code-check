@@ -83,10 +83,14 @@ test('cas planté : needs_validation, validateur vendor ok, 0700, pas de confirm
   assert.strictEqual(f[0].evidence[0].file, SQL);
   const v = sh('node', [path.join(__dirname, 'validate-security.cjs'), path.join(s.secDir, 'findings.json'), '--target', s.repo]);
   assert.strictEqual(v.status, 0, v.stderr);
-  for (const n of ['REPORT.md', 'FINDINGS-DETAIL.md', 'NEEDS-VALIDATION.md', 'summary.json']) assert.ok(fs.existsSync(path.join(s.secDir, n)), n);
+  for (const n of ['REPORT.md', 'FINDINGS-DETAIL.md', 'NEEDS-VALIDATION.md', 'PRIORITIES.md', 'summary.json']) assert.ok(fs.existsSync(path.join(s.secDir, n)), n);
   assert.deepStrictEqual(JSON.parse(fs.readFileSync(path.join(s.secDir, 'summary.json'), 'utf8')), { confirmed: 0, needs_validation: 1, rejected: 0, cross_hints: 0, status: 'ok' });
   assert.strictEqual(fs.statSync(s.secDir).mode & 0o777, 0o700);
   assert.match(fs.readFileSync(path.join(s.secDir, 'verify', '1.prompt.md'), 'utf8'), /Tu ne vois pas le raisonnement du chasseur/);
+  const prio = fs.readFileSync(path.join(s.secDir, 'PRIORITIES.md'), 'utf8');
+  assert.match(prio, /## P1 — Critique/);
+  assert.match(prio, new RegExp(`\\[${SQL.replace(/\./g, '\\.')}:17\\]\\([^)]+#L17\\)`));
+  assert.match(fs.readFileSync(path.join(s.secDir, 'REPORT.md'), 'utf8'), /PRIORITIES\.md/);
 });
 
 test('sandbox off : un verdict confirmed est rétrogradé en needs_validation', () => {
@@ -179,6 +183,7 @@ test('validation refusée : une réécriture, puis failed, code 2, aucun markdow
   assert.strictEqual(r2.status, 2);
   assert.strictEqual(JSON.parse(fs.readFileSync(path.join(s.secDir, 'summary.json'), 'utf8')).status, 'failed');
   assert.ok(!fs.existsSync(path.join(s.secDir, 'REPORT.md')));
+  assert.ok(!fs.existsSync(path.join(s.secDir, 'PRIORITIES.md')));
 });
 
 test('assert-review-has-no-security : ok sans fuite (nom de fichier partagé toléré), échec avec titre ou citation', () => {

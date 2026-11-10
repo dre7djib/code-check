@@ -168,7 +168,7 @@ Pistes croisées → 1 transmise à la sécurité
 | | Revue de code | Sécurité |
 |---|---|---|
 | Public | Le développeur, la PR | Développeur et équipe AppSec |
-| Fichiers | `REVIEW.md` | `REPORT.md`, `FINDINGS-DETAIL.md`, `NEEDS-VALIDATION.md`, `findings.json` |
+| Fichiers | `REVIEW.md` | `REPORT.md`, `FINDINGS-DETAIL.md`, `NEEDS-VALIDATION.md`, `PRIORITIES.md`, `findings.json` |
 | Verdicts | Bloquant, à corriger, suggestion | `confirmed`, `needs_validation`, `rejected` |
 | Rigueur | Rapide, tolère des faux positifs | Chaque finding vérifié par un agent indépendant |
 | Caveman | Oui, en interne | Non |
