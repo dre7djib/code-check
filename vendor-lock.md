@@ -12,10 +12,12 @@ La licence réelle de Caveman est MIT (fichier `LICENSE` du dépôt amont, copi�
 
 ## Modifications locales
 
-Frontmatter seulement, corps inchangé (vérifié par `diff`) :
+Frontmatter seulement pour Ponytail et Caveman, corps inchangé (vérifié par `diff`) :
 
 - `name` : `ponytail-review` → `ponytail` (le nom suit le dossier).
 - ajout de `user-invocable: false` et `disable-model-invocation: true` sur les deux skills : leurs descriptions se déclenchent sur « review this » et « be brief », et Caveman s'annonce « actif à chaque réponse ». Aucune ne doit se charger hors du plugin. Les agents du plugin lisent le fichier par son chemin.
+
+Cloudflare security-audit (hors frontmatter de `SKILL.md`) : voir la section « Modifications locales » sous la copie complète phase 6 (ouverture d'entrée Windows).
 
 ## Contrôle de copie
 
@@ -37,6 +39,8 @@ Frontmatter seulement, corps inchangé (vérifié par `diff`) :
 - Arborescence à plat conservée : `SKILL.md`, `report-schema.json`, `validate-findings.cjs`, `validate-coverage-ledger.cjs` et leurs tests, `RECONNAISSANCE.md`, `HUNTING.md`, `ATTACK-CLASSES.md`, `VALIDATION-AND-REPORTING.md` et les 9 guides par classe (`AI-AND-LLM`, `CLIENT-SIDE`, `CLOUD-AND-DEPLOYMENT`, `DATA-ISOLATION-AND-LIFECYCLE`, `DESKTOP-MOBILE-AND-LOCAL-IPC`, `MEMORY-SAFETY-AND-BINARY`, `PROTOCOLS-RPC-AND-MESSAGING`, `RESOURCE-EXHAUSTION-AND-AVAILABILITY`, `SUPPLY-CHAIN-AND-RELEASE`, `WEB-PROTOCOL-AND-AUTH`), `LICENSE`.
 - `node --test skills/security-audit/*.test.cjs` : 65 tests, verts, sans modification.
 - Contrôle télémétrie : `grep -E 'https?://'` sur la copie complète (markdown, `.cjs`, `.json`) : aucune occurrence, donc aucune URL d'exemple à lister et aucun point d'envoi de données.
-- Modification locale inchangée : frontmatter de `SKILL.md` seulement (`user-invocable: false`, `disable-model-invocation: true`).
+- Modifications locales :
+  - frontmatter de `SKILL.md` seulement (`user-invocable: false`, `disable-model-invocation: true`) ;
+  - validateurs : ouverture d'entrée Windows via `lstat` + identité `(dev, ino)` (équivalent de [cloudflare/security-audit-skill#145](https://github.com/cloudflare/security-audit-skill/pull/145), encore ouverte à la date du correctif). Sans cela, Node n'expose ni `O_NOFOLLOW` ni `O_NONBLOCK` sous Windows et chaque validation échoue avec « OS no-follow and nonblocking input protection is unavailable ».
 - Écart assumé : la skill prévoit un dossier de sortie `~/security-audit-skill/<repo>/run-<N>` ; l'enveloppe `agents/security/deep.md` le remplace par le dossier sécurité du plugin, hors dépôt ou ignoré par git (la skill autorise un dossier dans la cible si git l'ignore). `validate-findings.cjs` est appelé via `scripts/validate-security.cjs --target`.
 - Relecteur : relu par Claude (assistant) ; signature du propriétaire à apposer.
