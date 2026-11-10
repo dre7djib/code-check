@@ -16,13 +16,13 @@ function run(det, agents, axes = ['architecture', 'naming'], rules) {
   fs.writeFileSync(path.join(d, 'repo', 'a', 'B.java'), Array.from({ length: 10 }, (_, i) => `ligne ${i + 1}`).join('\n'));
   if (rules) fs.writeFileSync(path.join(d, 'repo', '.review', 'rules.yml'), rules);
   fs.mkdirSync(path.join(d, 'deterministic'));
-  fs.mkdirSync(path.join(d, 'review', 'findings'), { recursive: true });
+  fs.mkdirSync(path.join(d, 'audit', 'findings'), { recursive: true });
   fs.writeFileSync(path.join(d, 'context.json'), JSON.stringify({ run_id: 'r', mode: 'fast', host: 'claude', rules_sha256: 'a'.repeat(64), axes, repo: { path: path.join(d, 'repo') } }));
   fs.writeFileSync(path.join(d, 'deterministic', 'review-findings.json'), JSON.stringify(det));
-  for (const [axis, list] of Object.entries(agents)) fs.writeFileSync(path.join(d, 'review', 'findings', `${axis}.json`), JSON.stringify(list));
+  for (const [axis, list] of Object.entries(agents)) fs.writeFileSync(path.join(d, 'audit', 'findings', `${axis}.json`), JSON.stringify(list));
   const r = spawnSync('node', [script, d], { encoding: 'utf8' });
   const read = (p) => fs.readFileSync(path.join(d, p), 'utf8');
-  return { r, d, merged: JSON.parse(read('review/merged.json')), review: read('review/REVIEW.md'), cross: JSON.parse(read('cross-hints.json')) };
+  return { r, d, merged: JSON.parse(read('audit/merged.json')), review: read('audit/REVIEW.md'), cross: JSON.parse(read('cross-hints.json')) };
 }
 
 test('même file:line : une entrée, sévérité la plus haute, autres axes notés', () => {
@@ -81,12 +81,12 @@ test('simplicity : blocking écarté, test manquant écarté si tests actif, pis
 test('simplicity : test manquant gardé si tests inactif ; hints jamais dans REVIEW.md', () => {
   const d = run([], { architecture: [], simplicity: [f({ id: 's:c', axis: 'simplicity', severity: 'suggestion', title: 'Test manquant.' })] }, ['architecture', 'simplicity']);
   assert.strictEqual(d.merged.length, 1);
-  fs.writeFileSync(path.join(d.d, 'review', 'findings', 'simplicity-hints.json'), JSON.stringify([{ file: 'a/B.java', line: 9, note: 'DETAIL-PISTE' }]));
+  fs.writeFileSync(path.join(d.d, 'audit', 'findings', 'simplicity-hints.json'), JSON.stringify([{ file: 'a/B.java', line: 9, note: 'DETAIL-PISTE' }]));
   const r = spawnSync('node', [script, d.d], { encoding: 'utf8' });
   assert.ok(r.status !== 3);
-  assert.ok(!fs.readFileSync(path.join(d.d, 'review', 'REVIEW.md'), 'utf8').includes('DETAIL-PISTE'));
+  assert.ok(!fs.readFileSync(path.join(d.d, 'audit', 'REVIEW.md'), 'utf8').includes('DETAIL-PISTE'));
   assert.match(fs.readFileSync(path.join(d.d, 'cross-hints.json'), 'utf8'), /DETAIL-PISTE/);
-  assert.match(fs.readFileSync(path.join(d.d, 'review', 'REVIEW.md'), 'utf8'), /transmis au rapport sécurité/);
+  assert.match(fs.readFileSync(path.join(d.d, 'audit', 'REVIEW.md'), 'utf8'), /transmis au rapport sécurité/);
 });
 
 test('ancrage : ligne recalée sur evidence, fichier ou ligne introuvable écartés', () => {

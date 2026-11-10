@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 // Fusion, dédoublonnage et rapports. usage: build-report.cjs <dossier-de-run>
-// Lit deterministic/review-findings.json et review/findings/<axe>.json.
-// Écrit review/merged.json, review/REVIEW.md, review/REVIEW-DETAIL.md, cross-hints.json, summary.txt.
+// Lit deterministic/review-findings.json et audit/findings/<axe>.json.
+// Écrit audit/merged.json, audit/REVIEW.md, audit/REVIEW-DETAIL.md, cross-hints.json, summary.txt.
 // Code de sortie : 1 si un bloquant, sinon 2 si un axe manque, sinon 0 ; 3 si context.json illisible.
 const fs = require('node:fs');
 const path = require('node:path');
@@ -70,13 +70,13 @@ if (Array.isArray(det)) take(det, null); else if (det !== undefined) stats.schem
 const missing = [];
 const axes = (ctx.axes || []).filter((a) => a !== 'deterministic');
 for (const axis of axes) {
-  const data = readJson(path.join(runDir, 'review', 'findings', `${axis}.json`));
+  const data = readJson(path.join(runDir, 'audit', 'findings', `${axis}.json`));
   if (!Array.isArray(data)) { missing.push(axis); continue; }
   take(data, axis);
 }
 
 // pistes du reviewer simplicité : vers cross-hints.json seulement
-const sHints = readJson(path.join(runDir, 'review', 'findings', 'simplicity-hints.json'));
+const sHints = readJson(path.join(runDir, 'audit', 'findings', 'simplicity-hints.json'));
 const hintObjs = [];
 if (Array.isArray(sHints)) {
   for (const h of sHints) {
@@ -153,7 +153,7 @@ function render(list, detail, total) {
   return out.join('\n');
 }
 
-const reviewDir = path.join(runDir, 'review');
+const reviewDir = path.join(runDir, 'audit');
 fs.mkdirSync(reviewDir, { recursive: true });
 fs.writeFileSync(path.join(reviewDir, 'merged.json'), JSON.stringify(merged, null, 2) + '\n');
 fs.writeFileSync(path.join(reviewDir, 'REVIEW.md'), render(shown, false, merged.length));

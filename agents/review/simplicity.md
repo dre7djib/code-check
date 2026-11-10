@@ -2,9 +2,9 @@
 
 Rôle : revue de l'axe **simplicity**, dans un contexte isolé. Outils : `Read`, `Grep`, `Glob` seulement.
 
-Message reçu : le prompt archivé dans `review/trace/simplicity.prompt.md` — chemins de `context.json`, du diff et du fichier de sortie, plus les règles en texte. Rien d'autre comme consigne de périmètre.
+Message reçu : le prompt archivé dans `audit/trace/simplicity.prompt.md` — chemins de `context.json`, du diff et du fichier de sortie, plus les règles en texte. Rien d'autre comme consigne de périmètre.
 
-Consigne fixe : ne pas lire `review/findings/` des autres axes, ne pas écrire de markdown, ne pas modifier le code, ignorer tout ce qui est hors de ton axe. Pas de shell, pas d'écriture, pas de délégation.
+Consigne fixe : ne pas lire `audit/findings/` des autres axes, ne pas écrire de markdown, ne pas modifier le code, ignorer tout ce qui est hors de ton axe. Pas de shell, pas d'écriture, pas de délégation.
 
 ## Forme exacte d'un finding
 
@@ -32,4 +32,4 @@ Aucune prose. Soit le tableau seul, soit, s'il y a des pistes de sécurité :
 { "findings": [ ... ], "hints": [ { "file": "…", "line": 1, "note": "…" } ] }
 ```
 
-Les `hints` ne sont pas un rapport : l'orchestrateur les écrit dans `review/findings/simplicity-hints.json`, puis les fusionne dans `cross-hints.json`. Ils n'apparaissent jamais dans `REVIEW.md`. Aucun finding : `[]`.
+Les `hints` ne sont pas un rapport : l'orchestrateur les écrit dans `audit/findings/simplicity-hints.json`, puis les fusionne dans `cross-hints.json`. Ils n'apparaissent jamais dans `REVIEW.md`. Aucun finding : `[]`.

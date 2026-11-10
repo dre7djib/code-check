@@ -11,7 +11,7 @@ eval/setup-fixture.sh java-planted /tmp/fx      # dépôt git jetable : main = b
 cd /tmp/fx && <lancer la commande review sur l'hôte>
 ```
 
-Attendu : les quatre cas dans `.review/runs/<id>/review/merged.json`, sans doublon `fichier:ligne`, et un `REVIEW.md` sans les mots « CVE », « secret », « injection ». ArchUnit n'est pas dans ce fixture : le rapport porte « Architecture déterministe non exécutée », l'import interdit vient du reviewer d'architecture.
+Attendu : les quatre cas dans `.review/runs/<id>/audit/merged.json`, sans doublon `fichier:ligne`, et un `REVIEW.md` sans les mots « CVE », « secret », « injection ». ArchUnit n'est pas dans ce fixture : le rapport porte « Architecture déterministe non exécutée », l'import interdit vient du reviewer d'architecture.
 
 ## Autres fixtures (phase 3)
 

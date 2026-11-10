@@ -28,11 +28,10 @@ function review(s, byAxis = {}, skip = []) {
 }
 const archFinding = { id: 'architecture:domain-spring', axis: 'architecture', severity: 'blocking', file: DOM, line: 3, title: 'Le domaine importe Spring.', evidence: 'import org.springframework.stereotype.Component;', rule: 'layers.domain.forbidden_imports', source: 'agent' };
 function security(s, { verdict = 'needs_validation' } = {}) {
-  const p = js('prepare-security-dir.sh'.replace('.sh', '.sh'), [], {});
-  void p;
-  const r = sh('bash', [path.join(__dirname, 'prepare-security-dir.sh'), 'shop', path.basename(s.run), s.run], { cwd: s.repo });
+  const r = sh('bash', [path.join(__dirname, 'prepare-security-dir.sh'), s.run]);
   assert.strictEqual(r.status, 0, r.stderr);
   const sec = r.stdout.trim();
+  assert.strictEqual(sec, path.join(s.run, 'security'));
   const f = (a, i) => js('security-fast.cjs', a, { input: i });
   assert.strictEqual(f(['prepare', s.run, sec]).status, 0);
   assert.strictEqual(f(['save-candidates', sec], JSON.stringify([{ kind: 'injection', title: 'Requête SQL construite par concaténation', claim: 'Le paramètre est concaténé dans la requête.', file: SQL, line: 17, quote: QUOTE }])).status, 0);
@@ -54,7 +53,7 @@ test('fixture check-both : deux rapports séparés, résumé conforme, code 1, d
   assert.match(r.stdout, /Pistes croisées → 0 transmise à la sécurité/);
   assert.doesNotMatch(r.stdout, /SQL|concaténation|ProductSearch/);
   const fj = path.join(sec, 'findings.json');
-  const reviewMd = path.join(s.run, 'review', 'REVIEW.md');
+  const reviewMd = path.join(s.run, 'audit', 'REVIEW.md');
   assert.strictEqual(sh('bash', [path.join(__dirname, 'assert-review-has-no-security.sh'), reviewMd, fj]).status, 0);
   assert.strictEqual(sh('bash', [path.join(__dirname, 'assert-director-blind.sh'), fj, path.join(s.run, 'director'), path.join(s.run, 'summary.txt')]).status, 0);
   // contrôle négatif : un directeur qui aurait vu un titre
@@ -75,7 +74,7 @@ test('sécurité en timeout (1 s) : failed, revue propre -> 2, revue bloquante -
     assert.strictEqual(r.status, code, r.stdout);
     assert.match(r.stdout, /Sécurité        → échec \(délai\), pas de rapport/);
     assert.match(r.stdout, /pipelines séquentiels/);
-    assert.ok(fs.existsSync(path.join(s.run, 'review', 'REVIEW.md')));
+    assert.ok(fs.existsSync(path.join(s.run, 'audit', 'REVIEW.md')));
   }
 });
 
@@ -101,10 +100,12 @@ test('revue absente : ligne en échec, code 2 si la sécurité est ok', () => {
   assert.match(r.stdout, /Revue de code   → échec, pas de rapport/);
 });
 
-test('review seule ne crée pas .review/<nom-du-repo>/runs', () => {
+test('review seule ne crée pas audit/security hors du run', () => {
   const s = setup();
   review(s);
   assert.deepStrictEqual(fs.readdirSync(path.join(s.repo, '.review')).sort(), ['rules.yml', 'runs']);
+  assert.ok(fs.existsSync(path.join(s.run, 'audit', 'REVIEW.md')));
+  assert.ok(!fs.existsSync(path.join(s.run, 'security')));
 });
 
 test('pistes croisées : add-hints ne vérifie que les nouvelles ; budget épuisé -> bloqueur dédié', () => {

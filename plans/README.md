@@ -13,7 +13,7 @@ La phase 0 doit les confirmer. Tant qu'elles ne sont pas contredites par la note
 | 1 | Hôtes | Corrigée par la note de cadrage. Mistral Vibe, GitHub Copilot, Claude Code et Cursor chargent le même paquet. Le détail est dans [00-conventions.md](00-conventions.md). |
 | 2 | Pre-push | Revue rapide seule, désactivée par défaut. La sécurité fast ne part pas avec le hook. |
 | 3 | Composants figés | Un propriétaire plateforme, nommé en phase 0, relit chaque bump de commit. |
-| 4 | Rapports sécurité | `<workspace>/.review/<nom-du-repo>/runs/`, `0700`, gitignoré. Pas d'outil central en v1. |
+| 4 | Rapports sécurité | `<repo>/.review/runs/<run-id>/security/`, `0700`, gitignoré (avec le run). Pas d'outil central en v1. |
 | 5 | Mode deep | Poste développeur si un sandbox OS est disponible. Sinon le run deep s'arrête après la validation statique et laisse les pistes en `needs_validation`. |
 | 6 | Axes v1 | Architecture, nommage, tests, erreurs, puis simplicité (phase 3). La section 9 du plan v1 reste hors livraison. |
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 'use strict';
-// Construit le message de chaque reviewer et l'archive dans review/trace/<axe>.prompt.md.
+// Construit le message de chaque reviewer et l'archive dans audit/trace/<axe>.prompt.md.
 // usage: build-prompts.cjs <dossier-de-run> [--rules full|compact]
 // full    : rules.yml intégral, inline.
-// compact : review/rules.compact.txt (Caveman, écrit par l'orchestrateur) + le bloc `architecture:`
+// compact : audit/rules.compact.txt (Caveman, écrit par l'orchestrateur) + le bloc `architecture:`
 //           de rules.yml, recopié tel quel. Les couches ne passent jamais par la compression.
 // Le message contient les chemins context.json, diff.patch, sortie, et les règles. Rien d'autre.
 const fs = require('node:fs');
@@ -35,16 +35,16 @@ if (mode === 'full') {
   rulesPayload = `Règles (rules.yml, intégral) :\n\n${rules.trimEnd()}`;
 } else {
   let compact;
-  try { compact = fs.readFileSync(path.join(runDir, 'review', 'rules.compact.txt'), 'utf8').trimEnd(); }
-  catch { console.error('review/rules.compact.txt manquant : le produire avec la skill caveman avant --rules compact'); process.exit(1); }
+  try { compact = fs.readFileSync(path.join(runDir, 'audit', 'rules.compact.txt'), 'utf8').trimEnd(); }
+  catch { console.error('audit/rules.compact.txt manquant : le produire avec la skill caveman avant --rules compact'); process.exit(1); }
   rulesPayload = `Règles, hors couches (résumé compact) :\n\n${compact}\n\nCouches (rules.yml, recopiées telles quelles) :\n\n${architectureBlock(rules)}`;
 }
 
-const outDir = path.join(runDir, 'review', 'trace');
+const outDir = path.join(runDir, 'audit', 'trace');
 fs.mkdirSync(outDir, { recursive: true });
 let total = 0;
 for (const axis of ctx.axes) {
-  const out = path.join(runDir, 'review', 'findings', `${axis}.json`);
+  const out = path.join(runDir, 'audit', 'findings', `${axis}.json`);
   const msg = [
     `Axe : ${axis}`,
     `Contexte : ${path.join(runDir, 'context.json')}`,

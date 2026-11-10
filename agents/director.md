@@ -12,7 +12,7 @@ Le répertoire du plugin est le dossier qui contient `agents/`. Sur un hôte où
 4. **Budget.** `context.budget.max_minutes` et l'heure de début (`created_at`) vont aux deux orchestrateurs. Chacun s'arrête de lui-même.
 5. **Lancement.** Un seul message, deux délégations, en parallèle si l'hôte le permet :
    - orchestrateur revue (`agents/review/orchestrator.md`), chemin du run ;
-   - orchestrateur sécurité (`agents/security/orchestrator.md`), même run ; il crée le dossier `.review/<nom-du-repo>/runs/<run-id>/`.
+   - orchestrateur sécurité (`agents/security/orchestrator.md`), même run ; il crée `<run>/security/`.
    Hôte sans deux contextes simultanés : enchaîner, chacun dans un contexte neuf, et passer `--sequential` au résumé. Jamais les deux pipelines dans la même conversation.
 6. **Pistes croisées.** La sécurité démarre sans attendre : premier passage sur le diff et les seeds. Quand la revue a écrit `cross-hints.json`, relancer **uniquement** l'étape « pistes » de l'orchestrateur sécurité (`security-fast.cjs add-hints`, vérificateurs des seuls nouveaux candidats, puis `finalize`). Pas le chasseur, pas le diff. Budget restant insuffisant : `finalize --budget-exhausted`, les pistes restent `needs_validation` avec le bloqueur « Budget atteint avant vérification. »
 7. **Attente bornée.** `node <plugin>/scripts/await-pipeline.cjs review <run> --timeout <s>` et `... security <dossier> --timeout <s>`, avec `s = (max_minutes + 1) × 60 − temps écoulé`. Au délai, l'autre rapport est rendu et l'absent est `failed`.

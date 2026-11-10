@@ -15,9 +15,10 @@ const ctx = readJson(path.join(run, 'context.json'));
 if (!ctx) { console.error('context.json illisible'); process.exit(3); }
 let sec = args.includes('--sec') ? path.resolve(args[args.indexOf('--sec') + 1]) : null;
 if (!sec) { try { sec = fs.readFileSync(path.join(run, 'security-dir.path'), 'utf8').trim(); } catch { sec = null; } }
+if (!sec && fs.existsSync(path.join(run, 'security', 'summary.json'))) sec = path.join(run, 'security');
 
 // --- revue
-const reviewDir = path.join(run, 'review');
+const reviewDir = path.join(run, 'audit');
 const merged = readJson(path.join(reviewDir, 'merged.json'));
 const reviewDone = fs.existsSync(path.join(reviewDir, 'REVIEW.md')) && Array.isArray(merged);
 const missingAxes = (ctx.axes || []).filter((a) => !Array.isArray(readJson(path.join(reviewDir, 'findings', `${a}.json`))));

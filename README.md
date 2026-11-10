@@ -31,7 +31,7 @@ Dans un repo contenant `.review/rules.yml` (modèle : `templates/rules.example.y
 ```
 context.json  diff.patch  summary.txt  cross-hints.json
 deterministic/{raw/,review-findings.json,security-seeds.json}
-review/{findings/<axe>.json,merged.json,REVIEW.md,REVIEW-DETAIL.md}
+audit/{findings/<axe>.json,merged.json,REVIEW.md,REVIEW-DETAIL.md}
 ```
 
 Codes de sortie : 0 rien de bloquant, 1 au moins un `blocking`, 2 un axe a échoué sans bloquant, 3 configuration invalide (pas de `rules.yml`, délégation indisponible sur l'hôte).
@@ -44,18 +44,28 @@ Les outils déterministes ne sont pas embarqués : ArchUnit (test `*Architecture
 
 Commande `security`. Un chasseur lit le diff, un vérificateur à contexte neuf tente d'invalider chaque candidat, `findings.json` est écrit au schéma Cloudflare vendoré puis validé (`scripts/validate-security.cjs <findings.json> --target <repo>`). Le mode fast n'exécute rien : le verdict normal est `needs_validation`, jamais `confirmed`.
 
-Sortie, hors du dépôt cible versionné : `<workspace>/.review/<nom-du-repo>/runs/<run-id>/` en `0700` (`CODE_CHECK_WORKSPACE`, sinon la racine du dépôt ; `CODE_CHECK_SECURITY_DIR` remplace `<workspace>/.review`) :
+Sortie dans le même run que la revue : `<repo>/.review/runs/<run-id>/security/` en `0700` :
 
 ```
 findings.json  REPORT.md  FINDINGS-DETAIL.md  NEEDS-VALIDATION.md  summary.json
 meta.json  candidates.json  verify/<n>.{prompt.md,verdict.json}
 ```
 
-À faire dans le workspace (le plugin ne modifie pas le projet) : ajouter `/.review/` à son `.gitignore`. Le terminal n'affiche que les compteurs et le chemin du dossier, jamais un titre. `scripts/assert-review-has-no-security.sh <REVIEW.md> <findings.json>` vérifie qu'aucun finding sécurité n'a fui dans la revue.
+Layout unifié d'un run `check` :
+
+```
+.review/runs/<run-id>/
+  context.json  diff.patch  cross-hints.json  summary.txt
+  deterministic/
+  audit/       # revue de code (REVIEW.md, …)
+  security/    # sécurité (findings.json, …)
+```
+
+Ajouter `.review/runs/` au `.gitignore` du repo (le plugin ne le fait pas). Le terminal n'affiche que les compteurs et le chemin du dossier, jamais un titre. `scripts/assert-review-has-no-security.sh <REVIEW.md> <findings.json>` vérifie qu'aucun finding sécurité n'a fui dans la revue.
 
 ## Commande `security-deep`
 
-Audit complet du dépôt par la skill Cloudflare (six phases, agents isolés en parallèle). Jamais lancé par `check` ni par un hook. Exige `security.access: deep` dans `rules.yml`, Node ≥ 18 et un hôte qui sait déléguer en parallèle (sinon code 3, « deep indisponible sur cet hôte »). Sortie dans le dossier sécurité (`findings.json`, `architecture.md`, `coverage-ledger.json`, trois rapports, `summary.json`), en `0700`.
+Audit complet du dépôt par la skill Cloudflare (six phases, agents isolés en parallèle). Jamais lancé par `check` ni par un hook. Exige `security.access: deep` dans `rules.yml`, Node ≥ 18 et un hôte qui sait déléguer en parallèle (sinon code 3, « deep indisponible sur cet hôte »). Sortie dans `<run>/security/` (`findings.json`, `architecture.md`, `coverage-ledger.json`, trois rapports, `summary.json`), en `0700`.
 
 Le sandbox se déclare par `CODE_CHECK_SANDBOX`, un préfixe de commande qui enveloppe l'exécution du code de la cible, par exemple sur macOS : `CODE_CHECK_SANDBOX="sandbox-exec -p '(version 1)(allow default)(deny network*)'"`. Le script vérifie qu'il exécute `true` et refuse une connexion sortante. Il ne vérifie pas le reste (environnement vide, cible en lecture seule, limites de ressources) : c'est au préfixe de les imposer. Sans sandbox, le run reste en mode dégradé : `needs_validation` et `rejected` seulement, jamais `confirmed`.
 
@@ -71,7 +81,7 @@ Pistes croisées → 1 transmise à la sécurité
 
 Codes : 0 rien de bloquant ; 1 bloquant de revue ou `confirmed` sécurité au seuil `thresholds.security_confirmed_min_severity` ; 2 un pipeline manque ou échoue, sans bloquant ; 3 configuration, accès refusé, `deep` demandé (« utiliser la commande security-deep »). Le directeur ne lit de la sécurité que `summary.json` (`scripts/assert-director-blind.sh` le contrôle). Sans deux contextes simultanés, les pipelines s'enchaînent (`pipelines séquentiels` dans `summary.txt`). Le directeur n'attend pas au-delà de `max_minutes` + 1 minute (`scripts/await-pipeline.cjs`) et marque l'absent `failed`.
 
-`security.access` de `rules.yml` (`none`, `fast`, `deep`; absent = `fast`) est la politique du repo, pas un verrou par personne : `review` l'ignore, `security` et `check` exigent `fast`, `security-deep` exigera `deep` (`scripts/check-access.cjs`). Pour retirer une commande à un groupe, désactiver la skill dans la config d'administration de l'hôte. Les garanties réelles : le dossier `.review/<nom-du-repo>/runs/` en `0700` et gitignoré, et le fait que `review` ne lance pas la sécurité.
+`security.access` de `rules.yml` (`none`, `fast`, `deep`; absent = `fast`) est la politique du repo, pas un verrou par personne : `review` l'ignore, `security` et `check` exigent `fast`, `security-deep` exigera `deep` (`scripts/check-access.cjs`). Pour retirer une commande à un groupe, désactiver la skill dans la config d'administration de l'hôte. Les garanties réelles : `<run>/security/` en `0700` et `.review/runs/` gitignoré, et le fait que `review` ne lance pas la sécurité.
 
 ## Tests
 
