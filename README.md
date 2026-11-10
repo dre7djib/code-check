@@ -67,7 +67,7 @@ Ajouter `.review/runs/` au `.gitignore` du repo (le plugin ne le fait pas). Le t
 
 Audit complet du dépôt par la skill Cloudflare (six phases, agents isolés en parallèle). Jamais lancé par `check` ni par un hook. Exige `security.access: deep` dans `rules.yml`, Node ≥ 18 et un hôte qui sait déléguer en parallèle (sinon code 3, « deep indisponible sur cet hôte »). Sortie dans `<run>/security/` (`findings.json`, `architecture.md`, `coverage-ledger.json`, trois rapports, `summary.json`), en `0700`.
 
-Le sandbox se déclare par `CODE_CHECK_SANDBOX`, un préfixe de commande qui enveloppe l'exécution du code de la cible, par exemple sur macOS : `CODE_CHECK_SANDBOX="sandbox-exec -p '(version 1)(allow default)(deny network*)'"`. Le script vérifie qu'il exécute `true` et refuse une connexion sortante. Il ne vérifie pas le reste (environnement vide, cible en lecture seule, limites de ressources) : c'est au préfixe de les imposer. Sans sandbox, le run reste en mode dégradé : `needs_validation` et `rejected` seulement, jamais `confirmed`.
+Le sandbox s'applique à **toute** la sécurité (`security`, `check`, `security-deep`) via `scripts/sandbox-status.cjs` / `prereqs.json`. **Présent par défaut.** Pour le bloquer (jamais de `confirmed`) : `CODE_CHECK_SANDBOX=off` (aussi `absent`, `false`, `0`, `disabled`, `none`, `block`). Optionnel : préfixe d'isolement OS, par ex. macOS `CODE_CHECK_SANDBOX="sandbox-exec -p '(version 1)(allow default)(deny network*)'"` ; alors `present` seulement s'il isole vraiment (réseau refusé).
 
 ## Commande `check` (directeur)
 

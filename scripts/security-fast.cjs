@@ -14,11 +14,32 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { validate, safeRel } = require('./validate-security.cjs');
+const { resolveSandbox } = require('./sandbox-status.cjs');
 
 const KINDS = ['injection', 'deserialization', 'secret', 'access-control', 'cve', 'other'];
 const SEV = { low: 1, medium: 2, high: 3, critical: 4 };
-const BLOCKER_FAST = "Pas d'exécution locale en mode fast.";
+const BLOCKER_SANDBOX = 'Sandbox bloqué (CODE_CHECK_SANDBOX=off) : pas de confirmed.';
 const BLOCKER_HINT = 'Indice venu de la revue de code, non vérifié.';
+const SCORE = new Set(['informational', 'low', 'medium', 'high', 'critical']);
+
+function readSandbox(secDir) {
+  const p = readJson(path.join(secDir, 'prereqs.json'), {});
+  return p.sandbox !== 'absent';
+}
+
+function completeConfirmed(v) {
+  if (!v || v.verdict !== 'confirmed') return false;
+  if (!nonEmpty(v.root_cause) || !nonEmpty(v.intended_behavior)) return false;
+  if (!Array.isArray(v.conditions)) return false;
+  const ex = v.execution, rem = v.remediation, sev = v.severity, conf = v.confidence;
+  if (!ex || !nonEmpty(ex.attacker_perspective) || !Array.isArray(ex.payloads) || !Array.isArray(ex.instructions) || !nonEmpty(ex.observed_result)) return false;
+  if (!rem || !nonEmpty(rem.strategy)) return false;
+  if (!sev || !sev.likelihood || !sev.impact || !SCORE.has(sev.overall_severity)) return false;
+  if (!SCORE.has(sev.likelihood.score) || !nonEmpty(sev.likelihood.reason)) return false;
+  if (!SCORE.has(sev.impact.score) || !nonEmpty(sev.impact.reason)) return false;
+  if (!conf || !SCORE.has(conf.score) || !nonEmpty(conf.reason)) return false;
+  return true;
+}
 
 const readJson = (p, d) => { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return d; } };
 const writeJson = (p, v) => fs.writeFileSync(p, JSON.stringify(v, null, 2) + '\n');
@@ -82,7 +103,14 @@ function prepare(runDir, secDir) {
   }
   meta.cross_hints = out.filter((c) => c.origin === 'hint').length;
   meta.cross_hints_unresolved = unresolved;
+  const sandbox = resolveSandbox();
   writeJson(path.join(secDir, 'meta.json'), meta);
+  writeJson(path.join(secDir, 'prereqs.json'), {
+    node: process.version,
+    validators: 'ok',
+    subagents: 'assumed',
+    sandbox
+  });
   writeJson(path.join(secDir, 'seed-candidates.json'), out);
   const has = (f) => fs.existsSync(path.join(runDir, f));
   const lines = [
@@ -188,28 +216,44 @@ function saveVerdict(secDir, n) {
 }
 
 // --- finalize ------------------------------------------------------------
-function build(c, v, budgetOut) {
+function build(c, v, budgetOut, sandboxOn) {
   const fingerprint = `fast-${c.kind}-${sha(`${c.file}\n${c.quote}`).slice(0, 12)}`;
-  const base = {
-    fingerprint,
-    title: c.title,
-    description: `${c.claim} Origine : ${c.origin === 'hunter' ? 'chasseur' : c.origin === 'seed' ? 'seed déterministe' : 'indice de la revue'}.`,
-    claimed_root_cause: nonEmpty(v && v.root_cause) ? v.root_cause : c.claim,
-    trace: Array.isArray(v && v.trace) && v.trace.length ? v.trace : Array.isArray(c.trace) && c.trace.length ? c.trace
-      : [{ kind: 'sink', file: c.file, line: c.line, scope: 'diff du run (mode fast)', description: c.claim }],
-    evidence: [{ file: c.file, line: c.line, description: `Citation : ${c.quote}` }]
-  };
-  if (v && v.verdict === 'rejected') return { verdict: 'rejected', ...base, reason: v.reason };
+  const origin = c.origin === 'hunter' ? 'chasseur' : c.origin === 'seed' ? 'seed déterministe' : 'indice de la revue';
+  const trace = Array.isArray(v && v.trace) && v.trace.length ? v.trace : Array.isArray(c.trace) && c.trace.length ? c.trace
+    : [{ kind: 'sink', file: c.file, line: c.line, scope: 'diff du run (mode fast)', description: c.claim }];
+  const evidence = [{ file: c.file, line: c.line, description: `Citation : ${c.quote}` }];
+  const description = `${c.claim} Origine : ${origin}.`;
+  if (v && v.verdict === 'rejected') {
+    return {
+      verdict: 'rejected', fingerprint, title: c.title, description,
+      claimed_root_cause: nonEmpty(v.root_cause) ? v.root_cause : c.claim,
+      trace, evidence, reason: v.reason
+    };
+  }
+  if (sandboxOn && completeConfirmed(v)) {
+    return {
+      verdict: 'confirmed', fingerprint, title: c.title, description,
+      root_cause: v.root_cause, intended_behavior: v.intended_behavior,
+      trace, evidence, conditions: v.conditions,
+      execution: v.execution, remediation: v.remediation,
+      severity: v.severity, confidence: v.confidence
+    };
+  }
   const blockers = [];
   if (nonEmpty(v && v.blocker)) blockers.push(v.blocker);
   else if (!v) blockers.push(budgetOut && c.origin === 'hint' ? 'Budget atteint avant vérification.' : 'Vérification indépendante non réalisée.');
   if (c.origin === 'hint') blockers.push(BLOCKER_HINT);
-  blockers.push(BLOCKER_FAST);
+  if (!sandboxOn) blockers.push(BLOCKER_SANDBOX);
+  else if (v && v.verdict === 'confirmed') blockers.push('Verdict confirmed incomplet : champs Cloudflare manquants.');
   const plan = (v && v.validation_plan) || {};
   const validation_plan = {};
   validation_plan.local = nonEmpty(plan.local) ? plan.local : "Rejouer l'entrée contrôlée sur le chemin cité, dans un bac à sable, et observer le résultat.";
   if (nonEmpty(plan.deployment)) validation_plan.deployment = plan.deployment;
-  return { verdict: 'needs_validation', ...base, blockers: [...new Set(blockers)], validation_plan };
+  return {
+    verdict: 'needs_validation', fingerprint, title: c.title, description,
+    claimed_root_cause: nonEmpty(v && v.root_cause) ? v.root_cause : c.claim,
+    trace, evidence, blockers: [...new Set(blockers)], validation_plan
+  };
 }
 
 function md(findings) {
@@ -219,7 +263,7 @@ function md(findings) {
   const report = ['# Rapport sécurité (mode fast)', '',
     `confirmed : ${cf.length} · needs_validation : ${nv.length} · rejected : ${rj.length}`, '',
     '## Confirmés', list(cf), '', '## À valider', list(nv), '',
-    'Mode fast : aucune exécution locale. Les pistes à valider sont détaillées dans `NEEDS-VALIDATION.md`.', ''].join('\n');
+    'Les pistes à valider sont détaillées dans `NEEDS-VALIDATION.md`. Sandbox bloqué → jamais de confirmed.', ''].join('\n');
   const detail = ['# Détail des findings', '', ...findings.flatMap((f) => [
     `## ${f.title}`, `- fingerprint : \`${f.fingerprint}\``, `- verdict : ${f.verdict}`, `- description : ${f.description}`,
     `- cause : ${f.claimed_root_cause || f.root_cause}`,
@@ -236,19 +280,20 @@ function finalize(secDir, target, threshold, budgetOut) {
   const meta = readJson(path.join(secDir, 'meta.json'));
   const cands = readJson(path.join(secDir, 'candidates.json'), []);
   if (!meta) die('meta.json manquant : lancer prepare');
+  const sandboxOn = readSandbox(secDir);
   const attemptsFile = path.join(secDir, 'finalize.attempts');
   const attempts = (Number(fs.existsSync(attemptsFile) ? fs.readFileSync(attemptsFile, 'utf8') : 0) || 0) + 1;
   fs.writeFileSync(attemptsFile, String(attempts));
   const byFp = new Map();
   for (const c of cands) {
     const v = readJson(path.join(secDir, 'verify', `${c.n}.verdict.json`));
-    const f = build(c, v, budgetOut);
+    const f = build(c, v, budgetOut, sandboxOn);
     if (!byFp.has(f.fingerprint)) byFp.set(f.fingerprint, f);
   }
   const findings = [...byFp.values()].sort((a, b) => (a.fingerprint < b.fingerprint ? -1 : 1));
   const file = path.join(secDir, 'findings.json');
   writeJson(file, findings);
-  const errs = validate(file, target);
+  const errs = validate(file, target, { allowConfirmed: sandboxOn });
   const count = (k) => findings.filter((f) => f.verdict === k).length;
   const summary = { confirmed: count('confirmed'), needs_validation: count('needs_validation'), rejected: count('rejected'), cross_hints: meta.cross_hints || 0, status: 'ok' };
   if (errs.length) {
@@ -267,7 +312,7 @@ function finalize(secDir, target, threshold, budgetOut) {
   fs.writeFileSync(path.join(secDir, 'FINDINGS-DETAIL.md'), m.detail);
   fs.writeFileSync(path.join(secDir, 'NEEDS-VALIDATION.md'), m.needs);
   writeJson(path.join(secDir, 'summary.json'), summary);
-  console.log(`sécurité : confirmed ${summary.confirmed} · needs_validation ${summary.needs_validation} · rejected ${summary.rejected} · pistes croisées ${summary.cross_hints}`);
+  console.log(`sécurité : confirmed ${summary.confirmed} · needs_validation ${summary.needs_validation} · rejected ${summary.rejected} · pistes croisées ${summary.cross_hints}${sandboxOn ? '' : ' · sandbox absent (pas de confirmed)'}`);
   console.log(`Dossier : ${secDir}`);
   const min = SEV[threshold] || SEV.high;
   const hit = findings.some((f) => f.verdict === 'confirmed' && (SEV[f.severity && f.severity.overall_severity] || 0) >= min);

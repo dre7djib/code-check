@@ -3,8 +3,8 @@
 // Clôture d'un run deep : valide ce que la skill Cloudflare a écrit, écrit summary.json et exit-code.
 // usage: finalize-deep.cjs <dossier-sécurité> --target <repo> [--threshold high]
 // - coverage-ledger.json : validateur vendor (s'il existe).
-// - findings.json : validateur vendor + contrôles du dépôt cible. `confirmed` accepté seulement si
-//   prereqs.json dit sandbox=present ; sinon (ou prereqs absent) refusé.
+// - findings.json : validateur vendor + contrôles du dépôt cible. `confirmed` accepté sauf si
+//   prereqs.json dit sandbox=absent (défaut / prereqs manquant = present).
 // - run-metadata.json avec run_status != completed, ou un markdown manquant : status failed (fichiers partiels gardés).
 // Code : 0 ok ; 1 confirmed >= seuil ; 2 failed.
 const fs = require('node:fs');
@@ -21,7 +21,7 @@ const SEV = { low: 1, medium: 2, high: 3, critical: 4 };
 const readJson = (p) => { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return undefined; } };
 
 const prereqs = readJson(path.join(sec, 'prereqs.json')) || {};
-const sandbox = prereqs.sandbox === 'present';
+const sandbox = prereqs.sandbox !== 'absent';
 const meta = readJson(path.join(sec, 'run-metadata.json')) || {};
 const problems = [];
 

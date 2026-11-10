@@ -35,8 +35,8 @@ Consigne : **tenter d'invalider**. Ouvrir le fichier, suivre la donnée de l'ent
 Verdicts possibles, et seulement eux :
 
 - `rejected` : l'invalidation est montrée (barrière citée, flux inexistant, indice introuvable dans le code). `reason` obligatoire, avec fichier:ligne.
-- `needs_validation` : impossible d'invalider, impossible d'exécuter. Verdict normal du mode fast. `blocker` : ce qui manque précisément (par exemple « chemin d'appel depuis la route non rejoué »). `validation_plan.local` : comment rejouer, concrètement, dans un bac à sable. `validation_plan.deployment` optionnel.
-- **Jamais `confirmed`** en mode fast : pas d'exécution locale, donc pas de preuve. Le script rétrograde de toute façon.
+- `needs_validation` : impossible d'invalider ou preuve locale incomplète. `blocker` : ce qui manque précisément. `validation_plan.local` : comment rejouer, concrètement. `validation_plan.deployment` optionnel.
+- `confirmed` : seulement si le sandbox est présent (défaut) **et** que la preuve locale est complète (champs Cloudflare : `root_cause`, `intended_behavior`, `conditions`, `execution`, `remediation`, `severity`, `confidence`). Sinon le script rétrograde en `needs_validation`. Sandbox bloqué (`CODE_CHECK_SANDBOX=off`) → jamais `confirmed`.
 
 Pour un candidat d'origine `hint` : le bloqueur initial est « indice venu de la revue de code, non vérifié ». Même travail. Indice non retrouvé dans le code : `rejected`.
 
