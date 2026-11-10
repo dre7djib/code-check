@@ -48,13 +48,20 @@ test('prérequis : Node absent -> code 3, aucun JSON, rien écrit', () => {
   assert.strictEqual(r.stdout, '');
 });
 
-test('prérequis : validateurs OK, sandbox absent par défaut, JSON conforme', () => {
+test('prérequis : validateurs OK, sandbox present par défaut, JSON conforme', () => {
   const r = sh('bash', [PRE], { env: { CODE_CHECK_SANDBOX: '' } });
   assert.strictEqual(r.status, 0, r.stderr);
   const j = JSON.parse(r.stdout);
   assert.deepStrictEqual(Object.keys(j), ['node', 'validators', 'subagents', 'sandbox']);
-  assert.strictEqual(j.sandbox, 'absent');
+  assert.strictEqual(j.sandbox, 'present');
   assert.strictEqual(j.subagents, 'assumed');
+});
+
+test('prérequis : CODE_CHECK_SANDBOX=off bloque le sandbox', () => {
+  for (const v of ['off', 'absent', 'false', '0', 'disabled', 'none', 'block', 'OFF']) {
+    const r = sh('bash', [PRE], { env: { CODE_CHECK_SANDBOX: v } });
+    assert.strictEqual(JSON.parse(r.stdout).sandbox, 'absent', v);
+  }
 });
 
 test('prérequis : un préfixe qui laisse le réseau ouvert n’est pas un sandbox', () => {
@@ -65,6 +72,15 @@ test('prérequis : un préfixe qui laisse le réseau ouvert n’est pas un sandb
 test('prérequis : sandbox-exec sans réseau -> present (macOS seulement)', { skip: process.platform !== 'darwin' || !fs.existsSync('/usr/bin/sandbox-exec') }, () => {
   const r = sh('bash', [PRE], { env: { CODE_CHECK_SANDBOX: "sandbox-exec -p '(version 1)(allow default)(deny network*)'" } });
   assert.strictEqual(JSON.parse(r.stdout).sandbox, 'present');
+});
+
+test('finalize : prereqs manquant = sandbox present (confirmed accepté)', () => {
+  const s = secDir([confirmed('deep-injection-default')], 'present');
+  fs.rmSync(path.join(s.sec, 'prereqs.json'));
+  const r = fin(s, ['--threshold', 'high']);
+  assert.strictEqual(r.status, 1, r.stdout + r.stderr);
+  assert.strictEqual(summary(s).confirmed, 1);
+  assert.strictEqual(summary(s).status, 'ok');
 });
 
 test('sandbox absent : un confirmed est refusé, status failed, code 2', () => {
