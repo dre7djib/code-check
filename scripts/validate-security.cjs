@@ -4,7 +4,7 @@
 // 1. Lance le validateur Cloudflare vendoré, inchangé (skills/security-audit/validate-findings.cjs).
 // 2. Contrôles maison que le validateur vendor ne fait pas (il ne connaît pas le dépôt cible) :
 //    chaque fichier cité existe dans --target, la ligne existe, tri par fingerprint, fingerprint unique,
-//    et pas de `confirmed` en mode fast (sans bac à sable) sauf --allow-confirmed.
+//    et pas de `confirmed` si sandbox absent, sauf --allow-confirmed.
 // Sortie 0 : valide. Sortie 1 : refus, messages sur stderr.
 const fs = require('fs');
 const path = require('path');
@@ -40,7 +40,7 @@ function validate(findingsPath, target, opts = {}) {
     if (tag < prev) errors.push(`${tag} : findings non triés par fingerprint`);
     prev = tag;
     if (f.verdict === 'confirmed' && !opts.allowConfirmed) {
-      errors.push(`${tag} : verdict confirmed interdit en mode fast sans bac à sable`);
+      errors.push(`${tag} : verdict confirmed interdit quand sandbox absent`);
     }
     for (const c of [...(f.trace || []), ...(f.evidence || [])]) {
       if (!safeRel(c.file)) { errors.push(`${tag} : chemin cité invalide (${c.file})`); continue; }

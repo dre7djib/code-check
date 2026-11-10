@@ -22,6 +22,6 @@ Code de sortie : celui de `finalize` (0, 1, 2).
 
 - Faire chasse et vérification dans la même conversation.
 - Passer au vérificateur autre chose que son `verify/<n>.prompt.md`.
-- Écrire `confirmed`, un markdown à la main, ou un fichier hors du dossier sécurité.
+- Écrire `confirmed` si `prereqs.json` dit `sandbox: absent` ; écrire un markdown à la main, ou un fichier hors du dossier sécurité.
 - Écrire ou lire le dossier sécurité depuis `REVIEW.md` ou depuis la revue.
 - Modifier le code du repo.

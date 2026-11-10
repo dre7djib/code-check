@@ -30,6 +30,38 @@ function setup() {
   assert.strictEqual(fast(['prepare', runDir, secDir]).status, 0);
   return { repo, runDir, secDir };
 }
+function setupWithSandbox(expected = 'present') {
+  const prev = process.env.CODE_CHECK_SANDBOX;
+  if (expected === 'absent') process.env.CODE_CHECK_SANDBOX = 'off';
+  else delete process.env.CODE_CHECK_SANDBOX;
+  try {
+    const s = setup();
+    assert.strictEqual(JSON.parse(fs.readFileSync(path.join(s.secDir, 'prereqs.json'), 'utf8')).sandbox, expected);
+    return s;
+  } finally {
+    if (prev === undefined) delete process.env.CODE_CHECK_SANDBOX;
+    else process.env.CODE_CHECK_SANDBOX = prev;
+  }
+}
+const confirmedFull = {
+  verdict: 'confirmed',
+  root_cause: 'Concaténation dans la requête.',
+  intended_behavior: 'La requête doit être paramétrée.',
+  conditions: [],
+  execution: {
+    attacker_perspective: 'Utilisateur anonyme.',
+    payloads: ["x' OR '1'='1"],
+    instructions: ['Appeler find avec le payload.'],
+    observed_result: 'Toutes les lignes sont renvoyées.'
+  },
+  remediation: { strategy: 'Utiliser un PreparedStatement.' },
+  severity: {
+    likelihood: { score: 'high', reason: 'Entrée directe.' },
+    impact: { score: 'high', reason: 'Lecture de la table.' },
+    overall_severity: 'high'
+  },
+  confidence: { score: 'high', reason: 'Rejoué.' }
+};
 const hunterOut = [{ kind: 'injection', title: 'Requête SQL construite par concaténation', claim: "Le paramètre name est concaténé dans la requête sans paramétrage.", file: SQL, line: 17, quote: QUOTE }];
 const verdictNV = { verdict: 'needs_validation', blocker: "Le chemin d'appel depuis la route n'a pas été rejoué.", validation_plan: { local: "Appeler find avec name valant ' OR '1'='1 sur une base de test." } };
 
@@ -41,7 +73,7 @@ function pipeline(s, cands, verdict) {
 }
 
 test('cas planté : needs_validation, validateur vendor ok, 0700, pas de confirmed', () => {
-  const s = setup();
+  const s = setupWithSandbox('present');
   const r = pipeline(s, hunterOut, verdictNV);
   assert.strictEqual(r.status, 0, r.stderr);
   assert.doesNotMatch(r.stdout, /concaténation|SQL/); // aucun titre dans le terminal
@@ -57,17 +89,35 @@ test('cas planté : needs_validation, validateur vendor ok, 0700, pas de confirm
   assert.match(fs.readFileSync(path.join(s.secDir, 'verify', '1.prompt.md'), 'utf8'), /Tu ne vois pas le raisonnement du chasseur/);
 });
 
-test('un verdict confirmed du vérificateur est rétrogradé en needs_validation', () => {
-  const s = setup();
+test('sandbox off : un verdict confirmed est rétrogradé en needs_validation', () => {
+  const s = setupWithSandbox('absent');
   const r = pipeline(s, hunterOut, { verdict: 'confirmed', severity: 'critical' });
   assert.strictEqual(r.status, 0, r.stderr);
   const f = JSON.parse(fs.readFileSync(path.join(s.secDir, 'findings.json'), 'utf8'));
   assert.strictEqual(f[0].verdict, 'needs_validation');
-  assert.ok(f[0].blockers.some((b) => /exécution locale/.test(b)));
+  assert.ok(f[0].blockers.some((b) => /Sandbox bloqué/.test(b)));
 });
 
-test('le validateur maison refuse un confirmed en fast', () => {
-  const s = setup();
+test('sandbox present : confirmed complet conservé (code 1 au seuil)', () => {
+  const s = setupWithSandbox('present');
+  const r = pipeline(s, hunterOut, confirmedFull);
+  assert.strictEqual(r.status, 1, r.stderr + r.stdout);
+  const f = JSON.parse(fs.readFileSync(path.join(s.secDir, 'findings.json'), 'utf8'));
+  assert.strictEqual(f[0].verdict, 'confirmed');
+  assert.strictEqual(f[0].severity.overall_severity, 'high');
+});
+
+test('sandbox present : confirmed incomplet → needs_validation', () => {
+  const s = setupWithSandbox('present');
+  const r = pipeline(s, hunterOut, { verdict: 'confirmed', severity: 'critical' });
+  assert.strictEqual(r.status, 0, r.stderr);
+  const f = JSON.parse(fs.readFileSync(path.join(s.secDir, 'findings.json'), 'utf8'));
+  assert.strictEqual(f[0].verdict, 'needs_validation');
+  assert.ok(f[0].blockers.some((b) => /incomplet/.test(b)));
+});
+
+test('le validateur maison refuse un confirmed si sandbox absent', () => {
+  const s = setupWithSandbox('absent');
   pipeline(s, hunterOut, verdictNV);
   const fp = path.join(s.secDir, 'findings.json');
   const f = JSON.parse(fs.readFileSync(fp, 'utf8'));

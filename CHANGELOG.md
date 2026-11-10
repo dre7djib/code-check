@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Sandbox deep **présent par défaut** : plus besoin de poser `CODE_CHECK_SANDBOX`. Pour le bloquer : `CODE_CHECK_SANDBOX=off` (ou `absent` / `false` / `0` / `disabled` / `none` / `block`). Un préfixe OS reste optionnel ; s'il est posé, il doit vraiment isoler (réseau refusé) sinon `absent`.
+- Sandbox **présent par défaut pour toute la sécurité** (fast, check, deep) via `scripts/sandbox-status.cjs` / `prereqs.json`. Plus besoin de poser `CODE_CHECK_SANDBOX`. Pour le bloquer : `CODE_CHECK_SANDBOX=off` (ou `absent` / `false` / `0` / `disabled` / `none` / `block`). Un préfixe OS reste optionnel ; s'il est posé, il doit vraiment isoler (réseau refusé) sinon `absent`. En fast, un `confirmed` complet est conservé si le sandbox est présent.
 - Layout unifié : revue et sécurité sous le même run `<repo>/.review/runs/<run-id>/`, avec `audit/` (ex-`review/`) et `security/`. `prepare-security-dir.sh` ne prend plus qu'un argument (`<run>`) et crée `<run>/security` en `0700`. Suppression du dossier workspace `.review/<nom-du-repo>/` et des variables `CODE_CHECK_SECURITY_DIR` / `CODE_CHECK_WORKSPACE`.
 - Correctif Windows : les validateurs Cloudflare (`validate-findings.cjs`, `validate-coverage-ledger.cjs`) n'exigent plus `O_NOFOLLOW`/`O_NONBLOCK` (absents sous Node Windows). Sur `win32`, ouverture avec contrôle d'identité `(dev, ino)` avant/après `open` (port de [cloudflare/security-audit-skill#145](https://github.com/cloudflare/security-audit-skill/pull/145)). Sans ce correctif, la validation échoue systématiquement avec le code 2 (« OS no-follow and nonblocking input protection is unavailable »).
 

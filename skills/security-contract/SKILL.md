@@ -8,10 +8,10 @@ user-invocable: false
 
 Le schéma de `findings.json` est `skills/security-audit/report-schema.json` (copie figée Cloudflare, ne pas l'éditer). Un champ refusé se corrige dans notre writer, pas dans le schéma. Pas de schéma parallèle.
 
-| Verdict | Exigence en mode fast |
+| Verdict | Exigence |
 |---|---|
-| `confirmed` | **Interdit sans bac à sable.** Le mode fast n'exécute rien : ne jamais l'écrire. |
-| `needs_validation` | Citation, cause prétendue, bloqueur précis, plan de validation local ou de déploiement. Verdict normal du fast. |
+| `confirmed` | Autorisé quand le sandbox est **présent** (défaut). Interdit si `CODE_CHECK_SANDBOX=off` (ou équivalent) → `sandbox: absent`. Exige les champs Cloudflare complets (`root_cause`, `execution`, `remediation`, `severity`, …). |
+| `needs_validation` | Citation, cause prétendue, bloqueur précis, plan de validation local ou de déploiement. Verdict normal si la preuve locale manque. |
 | `rejected` | Le vérificateur a montré que la piste est fausse, avec la raison. Gardé pour ne pas rouvrir la piste au run suivant. |
 
 Interdit d'inventer un quatrième verdict.
