@@ -54,7 +54,7 @@ Le hook pre-push n'appelle pas un binaire d'hôte en dur. Il appelle `scripts/ru
 
 ## Emplacements
 
-Revue, dans le repo cible, non commitée :
+Revue et sécurité, dans le même run du repo cible, non commitées :
 
 ```
 .review/rules.yml                         # versionné, propriété de l'équipe
@@ -64,28 +64,24 @@ Revue, dans le repo cible, non commitée :
   deterministic/raw/                      # stdout des outils, non interprété
   deterministic/review-findings.json
   deterministic/security-seeds.json       # CVE, secrets : jamais vers REVIEW.md
-  review/findings/<axis>.json
-  review/merged.json
-  review/REVIEW.md
-  review/REVIEW-DETAIL.md
   cross-hints.json                        # pistes transmises à la sécurité
   summary.txt                             # compteurs seuls
+  audit/
+    findings/<axis>.json
+    merged.json
+    REVIEW.md
+    REVIEW-DETAIL.md
+  security/                               # 0700
+    findings.json
+    REPORT.md
+    FINDINGS-DETAIL.md
+    NEEDS-VALIDATION.md
+    coverage-ledger.json                  # deep seulement
 ```
 
 `<run-id>` = `YYYYMMDDTHHMMSSZ` + `-` + 12 caractères du SHA HEAD.
 
-Sécurité, à la racine du workspace. Un workspace peut contenir plusieurs repos :
-
-```
-<workspace>/.review/<nom-du-repo>/runs/<run-id>/
-  findings.json
-  REPORT.md
-  FINDINGS-DETAIL.md
-  NEEDS-VALIDATION.md
-  coverage-ledger.json                    # deep seulement
-```
-
-`<nom-du-repo>` est le nom du dossier du dépôt. Deux dépôts du même nom se distinguent par les 12 premiers hex du SHA-256 de leur chemin. `CODE_CHECK_SECURITY_DIR`, s'il est posé, remplace `<workspace>/.review`. La forme `<nom-du-repo>/runs/<run-id>/` reste. Le dossier du run est créé en `0700`. `/.review/` est ajouté au `.gitignore` du workspace par la doc de prise en main. `.review/runs/` du repo cible reste ignoré de son côté : c'est la revue, pas la sécurité. Le plugin ne modifie pas le projet sans demande. Les rapports ne sont pas commités. Le directeur reçoit les compteurs, pas le détail.
+`.review/runs/` est ignoré par git. Le plugin ne modifie pas le projet sans demande. Les rapports ne sont pas commités. Le directeur reçoit les compteurs, pas le détail.
 
 ## Modes
 
@@ -206,7 +202,7 @@ La procédure vit dans `agents/<rôle>.md`, sans frontmatter d'hôte. L'adaptate
 |---|---|---|---|
 | Reviewer d'axe | Lire et chercher dans le repo | Shell, écriture de code, délégation | Uniquement son JSON de findings, au chemin reçu |
 | Orchestrateur revue | Lire, chercher, shell des scripts du plugin, déléguer un reviewer | Écrire dans le repo hors du dossier de run | Le dossier `review/` du run |
-| Orchestrateur sécurité | Lire, chercher, shell des validateurs, déléguer | Écrire dans le code applicatif ou dans la revue | Uniquement `.review/<nom-du-repo>/runs/` |
+| Orchestrateur sécurité | Lire, chercher, shell des validateurs, déléguer | Écrire dans le code applicatif ou dans `audit/` | Uniquement `<run>/security/` |
 | Directeur | Lire, shell de cadrage, déléguer les deux orchestrateurs | Lire le détail sécurité | `context.json`, `summary.txt` |
 
 Correspondance des outils, tenue dans l'adaptateur et nulle part ailleurs :
@@ -235,7 +231,7 @@ Le message contient quatre chemins et rien d'autre comme consigne de périmètre
 3. le diff
 4. le chemin de sortie JSON
 
-Consigne fixe, répétée dans chaque agent : ne pas lire `review/findings/` des autres axes, ne pas écrire de markdown, ne pas modifier le code, ignorer tout ce qui est hors de son axe. L'architecture lit le fichier touché en entier (les imports sont souvent hors du hunk). Les autres axes s'en tiennent au diff plus les tests du fichier touché.
+Consigne fixe, répétée dans chaque agent : ne pas lire `audit/findings/` des autres axes, ne pas écrire de markdown, ne pas modifier le code, ignorer tout ce qui est hors de son axe. L'architecture lit le fichier touché en entier (les imports sont souvent hors du hunk). Les autres axes s'en tiennent au diff plus les tests du fichier touché.
 
 ## Composants figés
 

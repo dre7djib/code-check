@@ -14,14 +14,14 @@ if (!runA || !runB || !expectedPath) { console.error('usage: measure-tokens.cjs 
 
 const rd = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
 function chars(run) {
-  const dir = path.join(run, 'review', 'trace');
+  const dir = path.join(run, 'audit', 'trace');
   const meta = rd(path.join(dir, 'meta.json'));
   const files = fs.readdirSync(dir).filter((f) => f.endsWith('.prompt.md'));
   return { files: files.length, total: files.reduce((n, f) => n + fs.readFileSync(path.join(dir, f), 'utf8').length, 0), rules: meta.rules_chars, mode: meta.rules };
 }
 const expected = rd(expectedPath);
 const matches = (e, f) => f.axis === e.axis && f.file === e.file && Math.abs(f.line - e.line) <= 2;
-function lost(run) { const m = rd(path.join(run, 'review', 'merged.json')); return expected.filter((e) => !m.some((f) => matches(e, f))); }
+function lost(run) { const m = rd(path.join(run, 'audit', 'merged.json')); return expected.filter((e) => !m.some((f) => matches(e, f))); }
 
 const A = chars(runA), B = chars(runB);
 const lostA = lost(runA), lostB = lost(runB);

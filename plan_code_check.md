@@ -149,7 +149,7 @@ Le même tag Git est installé sur chaque hôte. Vibe le charge depuis son répe
 3. **Checks déterministes** : ArchUnit, dependency-cruiser, linters, audit des dépendances, scan de secrets.
 4. **Deux pipelines en parallèle**, chacun dans son contexte isolé :
    - Revue : reviewers en parallèle, consolidation, dédoublonnage par `fichier:ligne`, `REVIEW.md`.
-   - Sécurité : orchestrateur sécurité, findings vérifiés, rapports dans `<workspace>/.review/<nom-du-repo>/runs/`, gitignorés.
+   - Sécurité : orchestrateur sécurité, findings vérifiés, rapports dans `<repo>/.review/runs/<run-id>/security/`, gitignorés avec le run.
 5. **Routage des pistes croisées** : un indice de sécurité repéré par la revue est transmis au pipeline sécurité en `needs_validation`, sans rester dans le rapport de revue.
 6. **Synthèse minimale** dans le terminal, avec compteurs uniquement.
 
@@ -173,7 +173,7 @@ Pistes croisées → 1 transmise à la sécurité
 | Rigueur | Rapide, tolère des faux positifs | Chaque finding vérifié par un agent indépendant |
 | Caveman | Oui, en interne | Non |
 | Cadence | À chaque PR ou push | Diff en continu, deep planifié |
-| Emplacement | Dans le run du repo, visible dans la PR | `.review/<nom-du-repo>/runs/`, gitignoré, accès restreint |
+| Emplacement | Dans le run du repo (`audit/`), visible dans la PR | `<run>/security/`, gitignoré avec `.review/runs/`, accès restreint |
 
 Règles de séparation :
 
@@ -231,7 +231,7 @@ Le détail exécutable (fichiers, contrats, tests d'acceptation) est dans [plans
 
 - Orchestrateur sécurité et reviewer fast sur le diff.
 - Contrat de sortie : verdicts `confirmed`, `needs_validation`, `rejected`, validés par les scripts de la skill.
-- Rapports écrits dans `<workspace>/.review/<nom-du-repo>/runs/`, gitignorés.
+- Rapports écrits dans `<repo>/.review/runs/<run-id>/security/`, gitignorés.
 - **Critère d'acceptation** : un finding planté est détecté, validé par le schéma, et absent de `REVIEW.md`.
 
 ### Phase 5 : directeur et `/check` (3 à 4 jours)
@@ -283,7 +283,7 @@ Le détail exécutable (fichiers, contrats, tests d'acceptation) est dans [plans
 |---|---|---|
 | Trop de faux positifs | Les développeurs ignorent l'outil | Jeu de tests (phase 7), checks déterministes d'abord, plafond de 10 findings |
 | Coût et durée des runs | Adoption freinée | Trois modes, budgets par mode, Caveman en interne |
-| Données sensibles envoyées au modèle | Risque de conformité | Validation en phase 0, rapports dans `.review/<nom-du-repo>/runs/` gitignoré, accès séparé |
+| Données sensibles envoyées au modèle | Risque de conformité | Validation en phase 0, rapports dans `<run>/security/` gitignoré, accès séparé |
 | Composants externes modifiés en amont | Prompts non relus sur les postes | Copies figées, `vendor-lock.md`, relecture avant chaque mise à jour |
 | Conflit Ponytail et architecture hexagonale | Faux signalements de sur-ingénierie | Règles d'architecture passées en contexte, consigne explicite |
 | Doublons entre reviewers | Rapport illisible | Périmètre exclusif par reviewer, dédoublonnage par `fichier:ligne` |

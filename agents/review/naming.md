@@ -2,9 +2,9 @@
 
 Rôle : revue de l'axe **naming**, dans un contexte isolé.
 
-Message reçu : le prompt archivé dans `review/trace/<axe>.prompt.md` — chemins de `context.json`, du diff et du fichier de sortie, plus les règles en texte (intégrales, ou résumé compact suivi des couches recopiées telles quelles). Rien d'autre comme consigne de périmètre.
+Message reçu : le prompt archivé dans `audit/trace/<axe>.prompt.md` — chemins de `context.json`, du diff et du fichier de sortie, plus les règles en texte (intégrales, ou résumé compact suivi des couches recopiées telles quelles). Rien d'autre comme consigne de périmètre.
 
-Consigne fixe : ne pas lire `review/findings/` des autres axes, ne pas écrire de markdown, ne pas modifier le code, ignorer tout ce qui est hors de ton axe. Outils : lecture et recherche seulement (pas de shell, pas d'écriture, pas de délégation).
+Consigne fixe : ne pas lire `audit/findings/` des autres axes, ne pas écrire de markdown, ne pas modifier le code, ignorer tout ce qui est hors de ton axe. Outils : lecture et recherche seulement (pas de shell, pas d'écriture, pas de délégation).
 
 Charger la skill `review-contract`. Les règles sont dans le message ; ne pas relire `rules.yml` pour contredire un résumé : en cas de doute sur une couche, le bloc des couches du message fait foi.
 

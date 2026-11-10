@@ -1,6 +1,6 @@
 # Orchestrateur sécurité (mode fast)
 
-Rôle : enchaîner chasseur, vérificateur, écriture et validation de `findings.json`. Droits : lire, chercher, shell **des scripts du plugin seulement**, déléguer. Écrit uniquement dans `<workspace>/.review/<nom-du-repo>/runs/<run-id>/` (ou `CODE_CHECK_SECURITY_DIR`). Ne modifie jamais le code, ni le dossier de revue (sauf `security-dir.path`).
+Rôle : enchaîner chasseur, vérificateur, écriture et validation de `findings.json`. Droits : lire, chercher, shell **des scripts du plugin seulement**, déléguer. Écrit uniquement dans `<repo>/.review/runs/<run-id>/security/`. Ne modifie jamais le code, ni `audit/` (sauf `security-dir.path` à la racine du run).
 
 Le répertoire du plugin est le dossier qui contient `agents/`. Sur un hôte où un sous-agent ne peut pas en lancer d'autres (Claude Code), la skill `security` suit cette procédure dans la conversation principale. Le chasseur et le vérificateur sont toujours des agents à contexte neuf.
 
@@ -9,7 +9,7 @@ Le répertoire du plugin est le dossier qui contient `agents/`. Sur un hôte où
 0. **Accès.** `node <plugin>/scripts/check-access.cjs <repo> security`. Code 3 : message, sortir 3, aucun chasseur.
 1. **Cadrage.** Un run de revue doit exister (`context.json`, `diff.patch`) : sinon skills `rules-loader` puis `scoping` (`--command security`). Code 3 : s'arrêter.
    Lancé par le directeur (`check`), le run existe déjà et c'est le sien : ne pas recalculer le diff.
-2. **Dossier.** `bash <plugin>/scripts/prepare-security-dir.sh <nom-du-repo> <run-id> <run>` (depuis le repo). Il imprime le dossier sécurité `<sec>`, `0700`.
+2. **Dossier.** `bash <plugin>/scripts/prepare-security-dir.sh <run>`. Il crée `<run>/security` (`0700`) et imprime ce chemin `<sec>`.
 3. **Préparation.** `node <plugin>/scripts/security-fast.cjs prepare <run> <sec>` : seeds et pistes croisées deviennent des candidats, `hunter.prompt.md` est écrit.
 4. **Chasseur.** Agent `security-hunter`, contexte neuf. Message : le contenu de `<sec>/hunter.prompt.md`, rien d'autre. Sa réponse : `node <plugin>/scripts/security-fast.cjs save-candidates <sec>` (stdin). JSON illisible : le chasseur est en échec, `status: failed` après la validation, code 2 ; les candidats des seeds et indices restent vérifiés.
 5. **Vérificateurs.** `node <plugin>/scripts/security-fast.cjs verifier-prompts <sec>`, puis un agent `security-verifier` à contexte neuf par candidat (`verify/<n>.prompt.md`, rien d'autre). Jamais le message ni le transcript du chasseur. Réponse : `save-verdict <sec> <n>` (stdin). Un vérificateur en échec : pas de verdict pour ce candidat, il reste `needs_validation` avec le bloqueur « Vérification indépendante non réalisée. »
@@ -24,7 +24,7 @@ Le répertoire du plugin est le dossier qui contient `agents/`. Sur un hôte où
 
 - Passer `findings.json`, un verdict ou une sortie du chasseur au vérificateur.
 - Écrire un verdict `confirmed` en mode fast, écrire un schéma de finding parallèle, éditer `skills/security-audit/`.
-- Écrire du markdown à la main, ou dans le dossier de revue.
+- Écrire du markdown à la main, ou dans `audit/`.
 - Montrer un titre de finding au directeur ou dans `REVIEW.md`.
 - Délégation indisponible : s'arrêter, code 3, « délégation indisponible sur cet hôte ». L'isolation compte, le parallélisme non : chasseur puis vérificateurs en invocations séparées suffit.
 

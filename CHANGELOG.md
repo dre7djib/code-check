@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Layout unifié : revue et sécurité sous le même run `<repo>/.review/runs/<run-id>/`, avec `audit/` (ex-`review/`) et `security/`. `prepare-security-dir.sh` ne prend plus qu'un argument (`<run>`) et crée `<run>/security` en `0700`. Suppression du dossier workspace `.review/<nom-du-repo>/` et des variables `CODE_CHECK_SECURITY_DIR` / `CODE_CHECK_WORKSPACE`.
 - Correctif Windows : les validateurs Cloudflare (`validate-findings.cjs`, `validate-coverage-ledger.cjs`) n'exigent plus `O_NOFOLLOW`/`O_NONBLOCK` (absents sous Node Windows). Sur `win32`, ouverture avec contrôle d'identité `(dev, ino)` avant/après `open` (port de [cloudflare/security-audit-skill#145](https://github.com/cloudflare/security-audit-skill/pull/145)). Sans ce correctif, la validation échoue systématiquement avec le code 2 (« OS no-follow and nonblocking input protection is unavailable »).
 
 ## 0.6.0

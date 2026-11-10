@@ -21,11 +21,12 @@ function setup() {
   const sc = sh('node', [path.join(__dirname, 'scope.cjs'), repo, '--command', 'review', '--host', 'claude']);
   assert.strictEqual(sc.status, 0, sc.stderr);
   const runDir = sc.stdout.trim();
-  const runId = path.basename(runDir);
-  const p = sh('bash', [path.join(__dirname, 'prepare-security-dir.sh'), 'shop', runId, runDir], { cwd: repo });
+  const p = sh('bash', [path.join(__dirname, 'prepare-security-dir.sh'), runDir]);
   assert.strictEqual(p.status, 0, p.stderr);
   const secDir = p.stdout.trim();
+  assert.strictEqual(secDir, path.join(runDir, 'security'));
   assert.strictEqual(fs.readFileSync(path.join(runDir, 'security-dir.path'), 'utf8').trim(), secDir);
+  assert.strictEqual(fs.statSync(secDir).mode & 0o777, 0o700);
   assert.strictEqual(fast(['prepare', runDir, secDir]).status, 0);
   return { repo, runDir, secDir };
 }
@@ -144,17 +145,14 @@ test('assert-review-has-no-security : ok sans fuite (nom de fichier partagé tol
   assert.strictEqual(sh('bash', [assertSh, review, fj]).status, 1);
 });
 
-test('prepare-security-dir : deux dépôts du même nom ne partagent pas de dossier', () => {
-  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'cc-sd-'));
-  const mk = (sub) => { const r = path.join(d, sub, 'app'); fs.mkdirSync(r, { recursive: true }); sh('git', ['-C', r, 'init', '-q']); return r; };
-  const a = mk('a'), b = mk('b');
-  const env = { CODE_CHECK_SECURITY_DIR: path.join(d, 'sec') };
-  const da = sh('bash', [path.join(__dirname, 'prepare-security-dir.sh'), 'app', 'run1'], { cwd: a, env }).stdout.trim();
-  const db = sh('bash', [path.join(__dirname, 'prepare-security-dir.sh'), 'app', 'run1'], { cwd: b, env }).stdout.trim();
-  assert.notStrictEqual(da, db);
-  assert.ok(da.startsWith(path.join(d, 'sec', 'app', 'runs')));
-  assert.match(path.basename(path.dirname(path.dirname(db))), /^app-[0-9a-f]{12}$/);
-  assert.strictEqual(fs.statSync(db).mode & 0o777, 0o700);
+test('prepare-security-dir : sécurité sous le run, runs distincts isolés', () => {
+  const a = setup(), b = setup();
+  assert.strictEqual(a.secDir, path.join(a.runDir, 'security'));
+  assert.strictEqual(b.secDir, path.join(b.runDir, 'security'));
+  assert.notStrictEqual(a.secDir, b.secDir);
+  assert.ok(a.secDir.startsWith(a.runDir + path.sep));
+  assert.ok(b.secDir.startsWith(b.runDir + path.sep));
+  assert.strictEqual(fs.statSync(a.secDir).mode & 0o777, 0o700);
 });
 
 test('trace inventée par le chasseur : abandonnée, le pipeline passe', () => {

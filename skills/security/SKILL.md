@@ -10,7 +10,7 @@ Le répertoire du plugin est deux niveaux au-dessus de ce fichier. Le repo cible
 
 0. `node <plugin>/scripts/check-access.cjs <repo> security` : code 3, afficher le message et sortir. `security.access: none` interdit la commande.
 1. Skills `rules-loader` puis `scoping` (`--command security`, `--host` = hôte de la session) si le run de revue n'existe pas ; sinon réutiliser le dernier. Code 3 : afficher le message, sortir avec 3.
-2. `bash <plugin>/scripts/prepare-security-dir.sh <nom-du-repo> <run-id> <run>` puis `node <plugin>/scripts/security-fast.cjs prepare <run> <sec>`.
+2. `bash <plugin>/scripts/prepare-security-dir.sh <run>` puis `node <plugin>/scripts/security-fast.cjs prepare <run> <sec>`.
 3. Lancer l'agent `security-hunter` de l'hôte (contexte neuf) avec le contenu de `<sec>/hunter.prompt.md`. Enregistrer sa réponse : `security-fast.cjs save-candidates <sec>`.
 4. `security-fast.cjs verifier-prompts <sec>`, puis un agent `security-verifier` neuf par candidat, avec `verify/<n>.prompt.md` seulement. Enregistrer : `security-fast.cjs save-verdict <sec> <n>`. Hôte sans contexte neuf : s'arrêter, code 3, « délégation indisponible sur cet hôte ».
 5. Skill `security-contract`, puis `security-fast.cjs finalize <sec> --target <repo> --threshold <seuil de rules.yml>`. Code 4 : corriger une fois les verdicts refusés, relancer.

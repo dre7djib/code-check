@@ -13,9 +13,9 @@ function setup(compact) {
   const d = fs.mkdtempSync(path.join(os.tmpdir(), 'cc-bp-'));
   fs.mkdirSync(path.join(d, 'repo', '.review'), { recursive: true });
   fs.writeFileSync(path.join(d, 'repo', '.review', 'rules.yml'), rules);
-  fs.mkdirSync(path.join(d, 'run', 'review'), { recursive: true });
+  fs.mkdirSync(path.join(d, 'run', 'audit'), { recursive: true });
   fs.writeFileSync(path.join(d, 'run', 'context.json'), JSON.stringify({ axes: ['architecture', 'simplicity'], repo: { path: path.join(d, 'repo') } }));
-  if (compact) fs.writeFileSync(path.join(d, 'run', 'review', 'rules.compact.txt'), compact);
+  if (compact) fs.writeFileSync(path.join(d, 'run', 'audit', 'rules.compact.txt'), compact);
   return d;
 }
 const layerNames = [...rules.matchAll(/- name: (\w+)/g)].map((m) => m[1]);
@@ -23,18 +23,18 @@ const layerNames = [...rules.matchAll(/- name: (\w+)/g)].map((m) => m[1]);
 test('full : rules.yml intégral dans chaque prompt', () => {
   const d = setup();
   assert.strictEqual(spawnSync('node', [script, path.join(d, 'run'), '--rules', 'full']).status, 0);
-  const p = fs.readFileSync(path.join(d, 'run', 'review', 'trace', 'simplicity.prompt.md'), 'utf8');
+  const p = fs.readFileSync(path.join(d, 'run', 'audit', 'trace', 'simplicity.prompt.md'), 'utf8');
   assert.ok(p.includes(rules.trimEnd()));
 });
 test('compact : toute couche de rules.yml reste dans le prompt archivé', () => {
   const d = setup('naming: suffix Transactional si @Transactional. tests: fix si absent.');
   assert.strictEqual(spawnSync('node', [script, path.join(d, 'run'), '--rules', 'compact']).status, 0);
   for (const axis of ['architecture', 'simplicity']) {
-    const p = fs.readFileSync(path.join(d, 'run', 'review', 'trace', `${axis}.prompt.md`), 'utf8');
+    const p = fs.readFileSync(path.join(d, 'run', 'audit', 'trace', `${axis}.prompt.md`), 'utf8');
     for (const l of layerNames) assert.ok(p.includes(l), `couche ${l} absente du prompt ${axis}`);
     assert.ok(p.includes('forbidden_imports'));
   }
-  assert.ok(JSON.parse(fs.readFileSync(path.join(d, 'run', 'review', 'trace', 'meta.json'), 'utf8')).rules === 'compact');
+  assert.ok(JSON.parse(fs.readFileSync(path.join(d, 'run', 'audit', 'trace', 'meta.json'), 'utf8')).rules === 'compact');
 });
 test('compact sans rules.compact.txt : échec', () => {
   const d = setup();

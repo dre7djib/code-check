@@ -8,7 +8,7 @@ user-invocable: false
 
 Le répertoire du plugin est deux niveaux au-dessus de ce fichier.
 
-Lancer : `node <plugin>/scripts/build-report.cjs <dossier-de-run>`. Le script fusionne (déterministe + axes), dédoublonne par `file:line` (sévérité la plus haute gardée, autres axes dans `also_flagged_by`), trie (sévérité, chemin, ligne), plafonne à `display.review_max_findings`, et écrit `review/merged.json`, `review/REVIEW.md`, `review/REVIEW-DETAIL.md`, `cross-hints.json`, `summary.txt`.
+Lancer : `node <plugin>/scripts/build-report.cjs <dossier-de-run>`. Le script fusionne (déterministe + axes), dédoublonne par `file:line` (sévérité la plus haute gardée, autres axes dans `also_flagged_by`), trie (sévérité, chemin, ligne), plafonne à `display.review_max_findings`, et écrit `audit/merged.json`, `audit/REVIEW.md`, `audit/REVIEW-DETAIL.md`, `cross-hints.json`, `summary.txt`.
 
 Ne pas réécrire ces fichiers à la main. Le rapport est en français, construit depuis `merged.json` seulement.
 
