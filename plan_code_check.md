@@ -79,7 +79,8 @@ code-check/
 ├─ cursor/
 │  └─ agents/                  # agents Cursor, fichiers courts
 ├─ agents/                     # procédures partagées, sans format d'hôte
-│  ├─ director.md              chef d'orchestre des deux pipelines
+│  ├─ director.md              chef d'orchestre check (revue + fast)
+│  ├─ director-deep.md         chef d'orchestre check-deep (revue + deep)
 │  ├─ review/
 │  │  ├─ orchestrator.md
 │  │  ├─ architecture.md
@@ -98,7 +99,8 @@ code-check/
 │     └─ deep.md               skill Cloudflare
 ├─ skills/                     # un niveau : skills/<nom>/SKILL.md
 │  ├─ review/                  # commande
-│  ├─ check/                   # commande
+│  ├─ check/                   # commande (revue + sécurité fast)
+│  ├─ check-deep/              # commande (revue + sécurité deep)
 │  ├─ security/                # commande, mode fast
 │  ├─ security-deep/           # commande
 │  ├─ review-fix/              # commande, correctifs sûrs
@@ -127,7 +129,7 @@ code-check/
 └─ README.md
 ```
 
-Les commandes utilisateur sont des skills (`review`, `check`, `security`, `security-deep`, `review-fix`), pas un dossier `commands/`. Le préfixe est celui qu'affiche l'hôte (Vibe, Copilot, Claude, Cursor). Agent Plugins 1.0 ne charge pas une skill enfouie : `skills/<nom>/SKILL.md` est au premier niveau.
+Les commandes utilisateur sont des skills (`review`, `check`, `check-deep`, `security`, `security-deep`, `review-fix`), pas un dossier `commands/`. Le préfixe est celui qu'affiche l'hôte (Vibe, Copilot, Claude, Cursor). Agent Plugins 1.0 ne charge pas une skill enfouie : `skills/<nom>/SKILL.md` est au premier niveau.
 
 ### Dans chaque repo
 

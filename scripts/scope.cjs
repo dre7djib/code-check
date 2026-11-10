@@ -58,7 +58,8 @@ function main() {
     else if ((l.startsWith('+') || l.startsWith('-')) && !l.startsWith('+++') && !l.startsWith('---')) changed++;
   }
   const touchesReview = files.some((f) => f === '.review' || f.startsWith('.review/'));
-  const mode = command === 'security-deep' ? 'deep' : changed <= 200 && !touchesReview ? 'fast' : 'standard';
+  const mode = (command === 'security-deep' || command === 'check-deep') ? 'deep'
+    : changed <= 200 && !touchesReview ? 'fast' : 'standard';
 
   const stack = [];
   const has = (f) => fs.existsSync(path.join(repo, f));

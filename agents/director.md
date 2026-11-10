@@ -6,7 +6,7 @@ Le répertoire du plugin est le dossier qui contient `agents/`. Sur un hôte où
 
 ## Ordre
 
-1. **Refus du deep.** Argument `deep` : afficher « utiliser la commande security-deep », code 3, rien n'est créé. `/check` ne lance jamais le deep.
+1. **Refus du deep.** Argument `deep` : afficher « utiliser la commande check-deep (revue + deep) ou security-deep (deep seul) », code 3, rien n'est créé. `/check` ne lance jamais le deep.
 2. **Accès.** `node <plugin>/scripts/check-access.cjs <repo> check`. Code 3 : afficher le message, sortir 3. `security.access` est la politique du repo, pas un verrou par personne.
 3. **Cadrage unique.** Skills `rules-loader` puis `scoping` (`--command check`), une seule fois. Le même `context.json` et le même `diff.patch` vont aux deux orchestrateurs. Aucun ne recalcule un diff. Un commit arrivé pendant le run est ignoré : le patch écrit fait foi, `build-summary.cjs` le note.
 4. **Budget.** `context.budget.max_minutes` et l'heure de début (`created_at`) vont aux deux orchestrateurs. Chacun s'arrête de lui-même.

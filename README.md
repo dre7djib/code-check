@@ -67,9 +67,9 @@ Ajouter `.review/runs/` au `.gitignore` du repo (le plugin ne le fait pas). Le t
 
 ## Commande `security-deep`
 
-Audit complet du dépôt par la skill Cloudflare (six phases, agents isolés en parallèle). Jamais lancé par `check` ni par un hook. Exige `security.access: deep` dans `rules.yml`, Node ≥ 18 et un hôte qui sait déléguer en parallèle (sinon code 3, « deep indisponible sur cet hôte »). Sortie dans `<run>/security/` (`findings.json`, `architecture.md`, `coverage-ledger.json`, trois rapports, `PRIORITIES.md`, `summary.json`), en `0700`.
+Audit complet du dépôt par la skill Cloudflare (six phases, agents isolés en parallèle). Aussi lancé par `check-deep` (run déjà cadré). Jamais par `check` (fast) ni par un hook. Exige `security.access: deep` dans `rules.yml`, Node ≥ 18 et un hôte qui sait déléguer en parallèle (sinon code 3, « deep indisponible sur cet hôte »). Sortie dans `<run>/security/` (`findings.json`, `architecture.md`, `coverage-ledger.json`, trois rapports, `PRIORITIES.md`, `summary.json`), en `0700`.
 
-Le sandbox s'applique à **toute** la sécurité (`security`, `check`, `security-deep`) via `scripts/sandbox-status.cjs` / `prereqs.json`. **Présent par défaut.** Pour le bloquer (jamais de `confirmed`) : `CODE_CHECK_SANDBOX=off` (aussi `absent`, `false`, `0`, `disabled`, `none`, `block`). Optionnel : préfixe d'isolement OS, par ex. macOS `CODE_CHECK_SANDBOX="sandbox-exec -p '(version 1)(allow default)(deny network*)'"` ; alors `present` seulement s'il isole vraiment (réseau refusé).
+Le sandbox s'applique à **toute** la sécurité (`security`, `check`, `check-deep`, `security-deep`) via `scripts/sandbox-status.cjs` / `prereqs.json`. **Présent par défaut.** Pour le bloquer (jamais de `confirmed`) : `CODE_CHECK_SANDBOX=off` (aussi `absent`, `false`, `0`, `disabled`, `none`, `block`). Optionnel : préfixe d'isolement OS, par ex. macOS `CODE_CHECK_SANDBOX="sandbox-exec -p '(version 1)(allow default)(deny network*)'"` ; alors `present` seulement s'il isole vraiment (réseau refusé).
 
 ## Commande `check` (directeur)
 
@@ -81,9 +81,13 @@ Sécurité        → <dossier>       1 confirmed · 2 needs_validation
 Pistes croisées → 1 transmise à la sécurité
 ```
 
-Codes : 0 rien de bloquant ; 1 bloquant de revue ou `confirmed` sécurité au seuil `thresholds.security_confirmed_min_severity` ; 2 un pipeline manque ou échoue, sans bloquant ; 3 configuration, accès refusé, `deep` demandé (« utiliser la commande security-deep »). Le directeur ne lit de la sécurité que `summary.json` (`scripts/assert-director-blind.sh` le contrôle). Sans deux contextes simultanés, les pipelines s'enchaînent (`pipelines séquentiels` dans `summary.txt`). Le directeur n'attend pas au-delà de `max_minutes` + 1 minute (`scripts/await-pipeline.cjs`) et marque l'absent `failed`.
+Codes : 0 rien de bloquant ; 1 bloquant de revue ou `confirmed` sécurité au seuil `thresholds.security_confirmed_min_severity` ; 2 un pipeline manque ou échoue, sans bloquant ; 3 configuration, accès refusé, `deep` demandé (« utiliser check-deep ou security-deep »). Le directeur ne lit de la sécurité que `summary.json` (`scripts/assert-director-blind.sh` le contrôle). Sans deux contextes simultanés, les pipelines s'enchaînent (`pipelines séquentiels` dans `summary.txt`). Le directeur n'attend pas au-delà de `max_minutes` + 1 minute (`scripts/await-pipeline.cjs`) et marque l'absent `failed`.
 
-`security.access` de `rules.yml` (`none`, `fast`, `deep`; absent = `fast`) est la politique du repo, pas un verrou par personne : `review` l'ignore, `security` et `check` exigent `fast`, `security-deep` exigera `deep` (`scripts/check-access.cjs`). Pour retirer une commande à un groupe, désactiver la skill dans la config d'administration de l'hôte. Les garanties réelles : `<run>/security/` en `0700` et `.review/runs/` gitignoré, et le fait que `review` ne lance pas la sécurité.
+## Commande `check-deep` (directeur deep)
+
+`check-deep` cadre une fois en mode deep (`security.access: deep` exigé), lance la revue et la sécurité deep sur le même run, et n'imprime que des compteurs (même format que `check`). Pas de seconde passe `add-hints` : le deep audite le dépôt entier, les indices de revue ne passent pas par le pipeline fast. Prérequis deep avant toute création de run. Skill `check-deep`, procédure `agents/director-deep.md`, adaptateurs `director-deep` sur les 4 hôtes.
+
+`security.access` de `rules.yml` (`none`, `fast`, `deep`; absent = `fast`) est la politique du repo, pas un verrou par personne : `review` l'ignore, `security` et `check` exigent au moins `fast`, `security-deep` et `check-deep` exigent `deep` (`scripts/check-access.cjs`). Pour retirer une commande à un groupe, désactiver la skill dans la config d'administration de l'hôte. Les garanties réelles : `<run>/security/` en `0700` et `.review/runs/` gitignoré, et le fait que `review` ne lance pas la sécurité.
 
 ## Tests
 

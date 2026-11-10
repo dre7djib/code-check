@@ -1,6 +1,6 @@
 ---
 name: security-deep
-description: Commande security-deep. Audit de sécurité complet du dépôt par la skill Cloudflare (six phases, agents isolés parallèles). Jamais lancé par check ni par le hook.
+description: Commande security-deep. Audit de sécurité complet du dépôt par la skill Cloudflare (six phases, agents isolés parallèles). Aussi lancé par check-deep (run déjà cadré). Jamais par check (fast) ni par le hook.
 disable-model-invocation: true
 ---
 
@@ -18,5 +18,5 @@ Le répertoire du plugin est deux niveaux au-dessus de ce fichier. Le repo cible
 
 - Faire la chasse dans un seul contexte, ou la déguiser en deep avec les agents fast.
 - Écrire `confirmed` sans sandbox présent.
-- Lancer depuis `check` ou un hook.
+- Lancer depuis `check` (fast) ou un hook. Pour revue + deep : commande `check-deep`.
 - Modifier le code du repo.
