@@ -94,6 +94,7 @@ Markdown dérivés du JSON validé, dans le dossier sécurité seulement :
 - `REPORT.md` : compteurs et liste courte des `needs_validation` et `confirmed`.
 - `FINDINGS-DETAIL.md` : fiches.
 - `NEEDS-VALIDATION.md` : bloqueur et plan, un par piste.
+- `PRIORITIES.md` : classement P1/P2/P3 avec liens `fichier#Llignes` cliquables.
 
 Puis écrire le résumé compteurs au schéma `security-findings.schema.json` dans le dossier sécurité (`summary.json`). C'est l'unique objet lisible par le directeur en phase 5. En phase 4, la commande `security` affiche ces compteurs dans le terminal et le chemin du dossier. Elle n'affiche pas de titre de finding dans le terminal. Le même scénario est rejoué sur chaque hôte installé.
 
