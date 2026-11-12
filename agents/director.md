@@ -16,7 +16,8 @@ Le répertoire du plugin est le dossier qui contient `agents/`. Sur un hôte où
    Hôte sans deux contextes simultanés : enchaîner, chacun dans un contexte neuf, et passer `--sequential` au résumé. Jamais les deux pipelines dans la même conversation.
 6. **Pistes croisées.** La sécurité démarre sans attendre : premier passage sur le diff et les seeds. Quand la revue a écrit `cross-hints.json`, relancer **uniquement** l'étape « pistes » de l'orchestrateur sécurité (`security-fast.cjs add-hints`, vérificateurs des seuls nouveaux candidats, puis `finalize`). Pas le chasseur, pas le diff. Budget restant insuffisant : `finalize --budget-exhausted`, les pistes restent `needs_validation` avec le bloqueur « Budget atteint avant vérification. »
 7. **Attente bornée.** `node <plugin>/scripts/await-pipeline.cjs review <run> --timeout <s>` et `... security <dossier> --timeout <s>`, avec `s = (max_minutes + 1) × 60 − temps écoulé`. Au délai, l'autre rapport est rendu et l'absent est `failed`.
-8. **Résumé.** `node <plugin>/scripts/build-summary.cjs <run> [--sequential]`. Afficher sa sortie telle quelle. Son code de sortie est celui de la commande.
+8. **Usage.** Si la session expose un usage (tokens), l'écrire dans `<run>/usage.json` en nombres seuls (`{"tokens":12345}`) avant le résumé. Sinon ne rien inventer.
+9. **Résumé.** `node <plugin>/scripts/build-summary.cjs <run> [--sequential]`. Afficher sa sortie telle quelle (compteurs, durée, tokens). Son code de sortie est celui de la commande.
 
 ## Cécité
 

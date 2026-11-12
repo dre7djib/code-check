@@ -18,7 +18,8 @@ Différence avec `check` : la sécurité est **deep** (repo complet), pas fast. 
    Hôte sans deux contextes simultanés : enchaîner, chacun dans un contexte neuf, et passer `--sequential` au résumé. Jamais les deux pipelines dans la même conversation. Deep exige aussi des sous-agents parallèles en interne : si l'hôte ne sait pas, le deep sort 3 (« deep indisponible sur cet hôte »).
 6. **Pas de pistes croisées.** Ne pas lancer `security-fast.cjs add-hints`. Le deep audite le dépôt entier ; les indices de revue ne passent pas par le pipeline fast.
 7. **Attente bornée.** `node <plugin>/scripts/await-pipeline.cjs review <run> --timeout <s>` et `... security <dossier> --timeout <s>`, avec `s = (max_minutes + 1) × 60 − temps écoulé`. Au délai, l'autre rapport est rendu et l'absent est `failed`.
-8. **Résumé.** `node <plugin>/scripts/build-summary.cjs <run> [--sequential]`. Afficher sa sortie telle quelle. Son code de sortie est celui de la commande.
+8. **Usage.** Si la session expose un usage (tokens), l'écrire dans `<run>/usage.json` en nombres seuls (`{"tokens":12345}`) avant le résumé. Sinon ne rien inventer.
+9. **Résumé.** `node <plugin>/scripts/build-summary.cjs <run> [--sequential]`. Afficher sa sortie telle quelle (compteurs, durée, tokens). Son code de sortie est celui de la commande.
 
 ## Cécité
 

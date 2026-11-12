@@ -12,6 +12,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { validate } = require('./validate-security.cjs');
 const { writePriorities } = require('./build-priorities.cjs');
+const { finalizeUsage } = require('./usage-metrics.cjs');
 
 const sec = path.resolve(process.argv[2] || '');
 const a = process.argv.slice(3);
@@ -58,4 +59,10 @@ fs.writeFileSync(path.join(sec, 'exit-code'), String(code));
 console.log(`sécurité deep : confirmed ${summary.confirmed} · needs_validation ${summary.needs_validation} · rejected ${summary.rejected} · statut ${summary.status}${sandbox ? '' : ' · sandbox absent (pas de confirmed)'}`);
 if (failed) console.log(`${problems.length} point(s) en échec, détail dans failure.txt du dossier.`);
 console.log(`Dossier : ${sec}`);
+const runDir = path.dirname(sec);
+const ctx = readJson(path.join(runDir, 'context.json'));
+if (ctx) {
+  const { lines: metricLines } = finalizeUsage(runDir, ctx.created_at);
+  for (const line of metricLines) console.log(line);
+}
 process.exit(code);

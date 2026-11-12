@@ -2,11 +2,12 @@
 'use strict';
 // Résumé de /check : compteurs seulement. Seul objet sécurité lu : summary.json (+ exit-code, un nombre).
 // usage: build-summary.cjs <run> [--sec <dossier-sécurité>] [--sequential]
-// Écrit <run>/summary.txt, <run>/director/trace/summary.txt, <run>/usage.json s'il manque. Imprime le résumé.
+// Écrit <run>/summary.txt, <run>/director/trace/summary.txt, <run>/usage.json (durée + tokens). Imprime le résumé.
 // Code : 1 bloquant de revue ou confirmed >= seuil ; sinon 2 pipeline manquant ; sinon 0 ; 3 si context.json illisible.
 const fs = require('node:fs');
 const path = require('node:path');
 const cp = require('node:child_process');
+const { finalizeUsage } = require('./usage-metrics.cjs');
 
 const run = path.resolve(process.argv[2] || '');
 const args = process.argv.slice(3);
@@ -48,11 +49,12 @@ try {
   const head = cp.execFileSync('git', ['-C', ctx.repo.path, 'rev-parse', 'HEAD'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
   if (head !== ctx.repo.head) lines.push(`Diff figé       → le commit a changé pendant le run, le patch déjà écrit fait foi`);
 } catch { /* pas de git : rien à dire */ }
+const { lines: metricLines } = finalizeUsage(run, ctx.created_at);
+lines.push(...metricLines);
 const out = lines.join('\n') + '\n';
 
 fs.writeFileSync(path.join(run, 'summary.txt'), out);
 fs.mkdirSync(path.join(run, 'director', 'trace'), { recursive: true });
 fs.writeFileSync(path.join(run, 'director', 'trace', 'summary.txt'), out);
-if (!fs.existsSync(path.join(run, 'usage.json'))) fs.writeFileSync(path.join(run, 'usage.json'), JSON.stringify({ tokens: 'unknown' }) + '\n');
 process.stdout.write(out);
 process.exit(blocking > 0 || secHit ? 1 : reviewFailed || secFailed ? 2 : 0);

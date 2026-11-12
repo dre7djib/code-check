@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Métriques de fin de run : `Durée` et `Tokens` dans le résumé terminal (`build-summary.cjs`, `build-report.cjs`, `finalize` / `finalize-deep`). `usage.json` porte `tokens`, `elapsed_seconds`, `finished_at`. Tokens = nombre si la session les expose, sinon `inconnu`.
 - Commande `check-deep` : revue de code + sécurité deep sur un même run. Skill `skills/check-deep/`, procédure `agents/director-deep.md`, adaptateurs `director-deep` (Cursor, Claude, Copilot, Vibe). Exige `security.access: deep`. Prérequis deep avant cadrage ; pas de `add-hints` (le deep n'utilise pas le pipeline fast). `check` refuse toujours un argument `deep` et renvoie vers `check-deep` ou `security-deep`.
 - `PRIORITIES.md` en fin d'audit sécurité (fast et deep) : classement P1 / P2 / P3 des failles, avec liens markdown relatifs cliquables vers `fichier#Llignes`. Généré par `scripts/build-priorities.cjs` depuis `findings.json` (`finalize` / `finalize-deep`). Les confirmed suivent `overall_severity` ; les `needs_validation` ont une priorité provisoire (kind du fingerprint fast, sinon P2).
 - Sandbox **présent par défaut pour toute la sécurité** (fast, check, deep) via `scripts/sandbox-status.cjs` / `prereqs.json`. Plus besoin de poser `CODE_CHECK_SANDBOX`. Pour le bloquer : `CODE_CHECK_SANDBOX=off` (ou `absent` / `false` / `0` / `disabled` / `none` / `block`). Un préfixe OS reste optionnel ; s'il est posé, il doit vraiment isoler (réseau refusé) sinon `absent`. En fast, un `confirmed` complet est conservé si le sandbox est présent.

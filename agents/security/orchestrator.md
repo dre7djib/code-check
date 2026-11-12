@@ -18,7 +18,7 @@ Le répertoire du plugin est le dossier qui contient `agents/`. Sur un hôte où
    - Code 2 : deuxième refus. `summary.json` dit `failed`, aucun markdown. Sortir 2.
    - Appelé par le directeur : le premier passage ne connaît pas encore `cross-hints.json`. Quand la revue l'a écrit, le directeur relance **seulement** : `security-fast.cjs add-hints <run> <sec>`, `verifier-prompts`, un vérificateur par nouveau candidat, puis `finalize` (une fois, après les deux passes). Budget restant insuffisant : `finalize ... --budget-exhausted`.
 7. **Budget.** S'arrêter à `context.budget.max_minutes` depuis `created_at`. Si la session expose un usage, l'écrire dans `<run>/usage.json` (nombres seuls) et s'arrêter au-delà de `max_tokens` ; sinon la limite de temps est le seul coupe-circuit (`{"tokens":"unknown"}`).
-8. **Affichage.** Les compteurs de la dernière ligne de `finalize` et le chemin du dossier. Aucun titre, aucune citation, aucun chemin de fichier d'un finding dans le terminal.
+8. **Affichage.** Les compteurs de la dernière ligne de `finalize`, le chemin du dossier, puis durée et tokens. Aucun titre, aucune citation, aucun chemin de fichier d'un finding dans le terminal.
 
 ## Interdits
 
