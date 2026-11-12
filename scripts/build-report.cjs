@@ -7,6 +7,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { validateFinding } = require('./validate-review-findings.cjs');
+const { finalizeUsage } = require('./usage-metrics.cjs');
 
 const runDir = path.resolve(process.argv[2] || '');
 const readJson = (p) => { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return undefined; } };
@@ -161,6 +162,7 @@ fs.writeFileSync(path.join(reviewDir, 'REVIEW-DETAIL.md'), render(merged, true, 
 fs.writeFileSync(path.join(runDir, 'cross-hints.json'), JSON.stringify([...crossHints, ...hintObjs], null, 2) + '\n');
 
 const count = (s) => merged.filter((f) => f.severity === s).length;
+const { lines: metricLines } = finalizeUsage(runDir, ctx.created_at);
 const summary = [
   `Revue de code   → ${path.join(reviewDir, 'REVIEW.md')}   ${merged.length} findings (${count('blocking')} bloquants, ${count('fix')} à corriger, ${count('suggestion')} suggestions)`,
   'Sécurité        → ignorée',
@@ -171,6 +173,7 @@ const summary = [
   `Introuvables    → ${stats.unlocated}`,
   `Axes manquants  → ${missing.length ? missing.join(', ') : 'aucun'}`,
   `Hôte            → ${ctx.host}`,
+  ...metricLines,
   ''
 ].join('\n');
 fs.writeFileSync(path.join(runDir, 'summary.txt'), summary);

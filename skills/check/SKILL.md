@@ -13,7 +13,7 @@ Le répertoire du plugin est deux niveaux au-dessus de ce fichier. Le repo cible
 3. Skills `rules-loader` puis `scoping` (`--command check`, `--host` = hôte de la session), une seule fois.
 4. Suivre `agents/review/orchestrator.md` (skill `review`) et `agents/security/orchestrator.md` (skill `security`) sur le même run, chacun avec des agents à contexte neuf ; en parallèle si l'hôte sait ouvrir deux contextes, sinon à la suite (`--sequential`). Hôte sans contexte neuf : code 3, « délégation indisponible sur cet hôte ».
 5. Pistes croisées : quand `cross-hints.json` existe, seule l'étape `add-hints` de la sécurité est relancée.
-6. `await-pipeline.cjs` pour chaque pipeline, puis `build-summary.cjs`. Afficher sa sortie telle quelle.
+6. Si la session expose un usage (tokens), l'écrire dans `<run>/usage.json` (`{"tokens":N}`). Puis `await-pipeline.cjs` pour chaque pipeline, puis `build-summary.cjs`. Afficher sa sortie telle quelle (compteurs, durée, tokens).
 
 Code de sortie : celui de `build-summary.cjs` (0, 1, 2).
 

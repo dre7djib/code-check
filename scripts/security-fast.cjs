@@ -16,6 +16,7 @@ const crypto = require('crypto');
 const { validate, safeRel } = require('./validate-security.cjs');
 const { writePriorities, locLink } = require('./build-priorities.cjs');
 const { resolveSandbox } = require('./sandbox-status.cjs');
+const { finalizeUsage } = require('./usage-metrics.cjs');
 
 const KINDS = ['injection', 'deserialization', 'secret', 'access-control', 'cve', 'other'];
 const SEV = { low: 1, medium: 2, high: 3, critical: 4 };
@@ -317,6 +318,11 @@ function finalize(secDir, target, threshold, budgetOut) {
   writeJson(path.join(secDir, 'summary.json'), summary);
   console.log(`sécurité : confirmed ${summary.confirmed} · needs_validation ${summary.needs_validation} · rejected ${summary.rejected} · pistes croisées ${summary.cross_hints}${sandboxOn ? '' : ' · sandbox absent (pas de confirmed)'}`);
   console.log(`Dossier : ${secDir}`);
+  if (meta.review_run) {
+    const ctx = readJson(path.join(meta.review_run, 'context.json'), {});
+    const { lines: metricLines } = finalizeUsage(meta.review_run, ctx.created_at);
+    for (const line of metricLines) console.log(line);
+  }
   const min = SEV[threshold] || SEV.high;
   const hit = findings.some((f) => f.verdict === 'confirmed' && (SEV[f.severity && f.severity.overall_severity] || 0) >= min);
   fs.writeFileSync(path.join(secDir, 'exit-code'), hit ? '1' : '0');

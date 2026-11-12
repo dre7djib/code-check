@@ -79,7 +79,12 @@ Le sandbox s'applique à **toute** la sécurité (`security`, `check`, `check-de
 Revue de code   → <REVIEW.md>     2 bloquants · 5 à corriger · 8 suggestions
 Sécurité        → <dossier>       1 confirmed · 2 needs_validation
 Pistes croisées → 1 transmise à la sécurité
+Hôte            → claude · mode standard
+Durée          → 3 min 42 s
+Tokens         → 45230
 ```
+
+`Durée` est calculée depuis `context.created_at`. `Tokens` reprend `<run>/usage.json` quand la session expose un usage ; sinon `inconnu`. Le fichier `usage.json` contient aussi `elapsed_seconds` et `finished_at`.
 
 Codes : 0 rien de bloquant ; 1 bloquant de revue ou `confirmed` sécurité au seuil `thresholds.security_confirmed_min_severity` ; 2 un pipeline manque ou échoue, sans bloquant ; 3 configuration, accès refusé, `deep` demandé (« utiliser check-deep ou security-deep »). Le directeur ne lit de la sécurité que `summary.json` (`scripts/assert-director-blind.sh` le contrôle). Sans deux contextes simultanés, les pipelines s'enchaînent (`pipelines séquentiels` dans `summary.txt`). Le directeur n'attend pas au-delà de `max_minutes` + 1 minute (`scripts/await-pipeline.cjs`) et marque l'absent `failed`.
 

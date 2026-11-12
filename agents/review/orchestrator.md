@@ -19,6 +19,7 @@ Le répertoire du plugin est le dossier qui contient `agents/`. Sur un hôte où
 - Un reviewer en échec : les autres comptent, le rapport nomme l'axe manquant.
 - Délégation indisponible sur l'hôte : s'arrêter, code 3, « délégation indisponible sur cet hôte ». Ne jamais faire les quatre axes dans la même conversation.
 - Budget : couper au `max_minutes` du mode (`rules.yml` `budgets`). Ce qui est écrit est rendu, par `build-report.cjs`. Ne pas basculer en deep.
+- Usage : si la session expose un usage, l'écrire dans `<run>/usage.json` (nombres seuls) avant `build-report.cjs` et s'arrêter au-delà de `max_tokens` ; sinon `{"tokens":"unknown"}`. `build-report.cjs` affiche durée et tokens en fin de résumé.
 
 ## Code de sortie
 

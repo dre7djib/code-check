@@ -51,7 +51,13 @@ test('fixture check-both : deux rapports séparés, résumé conforme, code 1, d
   assert.match(r.stdout, /Revue de code   → .*REVIEW\.md\s+1 bloquant · 0 à corriger · 0 suggestion\n/);
   assert.match(r.stdout, new RegExp(`Sécurité        → ${sec.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+0 confirmed · 1 needs_validation\\n`));
   assert.match(r.stdout, /Pistes croisées → 0 transmise à la sécurité/);
+  assert.match(r.stdout, /Durée          → /);
+  assert.match(r.stdout, /Tokens         → inconnu/);
   assert.doesNotMatch(r.stdout, /SQL|concaténation|ProductSearch/);
+  const usage = JSON.parse(fs.readFileSync(path.join(s.run, 'usage.json'), 'utf8'));
+  assert.strictEqual(usage.tokens, 'unknown');
+  assert.ok(Number.isInteger(usage.elapsed_seconds));
+  assert.ok(usage.finished_at);
   const fj = path.join(sec, 'findings.json');
   const reviewMd = path.join(s.run, 'audit', 'REVIEW.md');
   assert.strictEqual(sh('bash', [path.join(__dirname, 'assert-review-has-no-security.sh'), reviewMd, fj]).status, 0);
@@ -186,4 +192,15 @@ test('scope : context porte security_access et le budget du mode', () => {
   const ctx = JSON.parse(fs.readFileSync(path.join(s.run, 'context.json'), 'utf8'));
   assert.strictEqual(ctx.security_access, 'fast');
   assert.deepStrictEqual(ctx.budget, { max_minutes: 5, max_tokens: 80000 });
+});
+
+test('build-summary : préserve tokens connus dans usage.json', () => {
+  const s = setup();
+  review(s);
+  security(s);
+  fs.writeFileSync(path.join(s.run, 'usage.json'), JSON.stringify({ tokens: 99001 }) + '\n');
+  const r = js('build-summary.cjs', [s.run]);
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.match(r.stdout, /Tokens         → 99001/);
+  assert.strictEqual(JSON.parse(fs.readFileSync(path.join(s.run, 'usage.json'), 'utf8')).tokens, 99001);
 });
